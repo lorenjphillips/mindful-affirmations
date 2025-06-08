@@ -412,10 +412,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[Audio] Successfully updated meditation with audio URL`);
         
         // Complete the response
-        res.write(JSON.stringify({ 
+        const finalResponse = { 
           status: "complete", 
           meditation: updatedMeditation 
-        }));
+        };
+        console.log(`[Audio] Sending final response:`, finalResponse);
+        res.write(JSON.stringify(finalResponse) + '\n');
         res.end();
         return;
         

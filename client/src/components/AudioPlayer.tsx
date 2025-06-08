@@ -245,35 +245,54 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
     if (isPlaying) {
       // Check if we have a premium audio URL from ElevenLabs first
       if (meditation.audioUrl && meditation.audioUrl.includes('/api/audio/')) {
-        console.log('Using premium ElevenLabs audio:', meditation.audioUrl);
+        console.log('✅ Using premium ElevenLabs audio:', meditation.audioUrl);
         
         // Create audio element for ElevenLabs audio
         const audioElement = new Audio(meditation.audioUrl);
+        
+        // Add comprehensive logging for debugging
+        audioElement.addEventListener('loadstart', () => {
+          console.log('🔄 ElevenLabs audio: Starting to load');
+        });
+        
+        audioElement.addEventListener('loadedmetadata', () => {
+          console.log('📊 ElevenLabs audio: Metadata loaded, duration:', audioElement.duration);
+        });
+        
+        audioElement.addEventListener('canplay', () => {
+          console.log('▶️ ElevenLabs audio: Can start playing');
+        });
+        
         audioElement.onloadeddata = () => {
-          console.log('Premium audio loaded, starting playback');
+          console.log('✅ ElevenLabs audio loaded successfully, duration:', audioElement.duration);
           
           // Check if audio has actual content (duration > 0)
-          if (audioElement.duration > 0) {
-            audioElement.play().catch(err => {
-              console.error('Error playing premium audio:', err);
+          if (audioElement.duration > 0 && !isNaN(audioElement.duration)) {
+            console.log('🎵 Starting ElevenLabs audio playback');
+            audioElement.play().then(() => {
+              console.log('✅ ElevenLabs audio playback started successfully');
+            }).catch(err => {
+              console.error('❌ Error playing ElevenLabs audio:', err);
               // Fallback to speech synthesis
               startSpeechSynthesis();
             });
           } else {
-            console.log('Premium audio appears to be silent/empty, falling back to speech synthesis');
+            console.log('⚠️ ElevenLabs audio appears to be silent/empty (duration:', audioElement.duration, '), falling back to speech synthesis');
             startSpeechSynthesis();
           }
         };
         
         audioElement.onended = () => {
+          console.log('🏁 ElevenLabs audio playback completed');
           setIsPlaying(false);
           if (onMeditationComplete) {
             onMeditationComplete();
           }
         };
         
-        audioElement.onerror = () => {
-          console.log('Premium audio failed to load, falling back to speech synthesis');
+        audioElement.onerror = (error) => {
+          console.error('❌ ElevenLabs audio failed to load:', error);
+          console.log('🔄 Falling back to speech synthesis');
           startSpeechSynthesis();
         };
         
@@ -281,18 +300,26 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
         audioElement.oncanplaythrough = () => {
           setTimeout(() => {
             if (audioElement.duration === 0 || isNaN(audioElement.duration)) {
-              console.log('Premium audio duration is 0 or invalid, falling back to speech synthesis');
+              console.log('⚠️ ElevenLabs audio duration is 0 or invalid, falling back to speech synthesis');
               audioElement.pause();
               startSpeechSynthesis();
+            } else {
+              console.log('✅ ElevenLabs audio ready to play, duration:', audioElement.duration);
             }
           }, 100);
         };
         
         // Store reference for pause/play control
         speechSynthRef.current = audioElement as any;
+        
+        // Force immediate attempt to load the audio
+        console.log('🔄 Forcing ElevenLabs audio load...');
+        audioElement.load();
         return;
       }
       
+      console.log('⚠️ No ElevenLabs audio URL found, using speech synthesis fallback');
+      console.log('📝 Meditation audioUrl:', meditation.audioUrl);
       // Fallback to speech synthesis if no premium audio
       startSpeechSynthesis();
       

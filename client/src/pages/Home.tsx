@@ -256,6 +256,7 @@ export default function Home() {
       setCurrentTab("preview");
       
       try {
+        console.log("🔄 Sending ElevenLabs audio generation request...");
         const response = await fetch(`/api/meditations/generate-audio`, {
           method: 'POST',
           headers: {
@@ -274,20 +275,60 @@ export default function Home() {
           })
         });
         
-        console.log("Premium voice generation request sent successfully to ElevenLabs API");
+        console.log("📤 ElevenLabs request sent, status:", response.status);
         
         if (response.ok) {
-          const serverMeditation = await response.json();
-          if (serverMeditation && serverMeditation.audioUrl) {
-            console.log("Updated meditation with server audio URL:", serverMeditation.audioUrl);
-            setMeditation({
-              ...meditationWithScript,
-              audioUrl: serverMeditation.audioUrl
-            });
+          // Handle streaming response from server
+          const reader = response.body?.getReader();
+          if (reader) {
+            console.log("📡 Reading streaming response from server...");
+            const decoder = new TextDecoder();
+            let buffer = '';
+            
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+              
+              for (const line of lines) {
+                if (line.trim()) {
+                  try {
+                    const data = JSON.parse(line);
+                    console.log("📨 Server response:", data);
+                    
+                    if (data.status === 'complete' && data.meditation) {
+                      console.log("✅ Audio generation complete, updating meditation with:", data.meditation.audioUrl);
+                      setMeditation({
+                        ...meditationWithScript,
+                        audioUrl: data.meditation.audioUrl
+                      });
+                    }
+                  } catch (e) {
+                    console.log("📝 Server message:", line);
+                  }
+                }
+              }
+            }
+          } else {
+            // Fallback for non-streaming response
+            const serverMeditation = await response.json();
+            console.log("📨 Non-streaming response:", serverMeditation);
+            if (serverMeditation && serverMeditation.audioUrl) {
+              console.log("✅ Updated meditation with server audio URL:", serverMeditation.audioUrl);
+              setMeditation({
+                ...meditationWithScript,
+                audioUrl: serverMeditation.audioUrl
+              });
+            }
           }
+        } else {
+          console.error("❌ Server responded with error:", response.status, response.statusText);
         }
       } catch (error) {
-        console.error("Error requesting premium voice generation:", error);
+        console.error("❌ Error requesting premium voice generation:", error);
       }
         
     } catch (error) {
