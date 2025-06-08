@@ -321,31 +321,31 @@ export default function Home() {
   };
   
   return (
-    <div className="pb-10 px-4 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-8 py-8">
+    <div className="pb-8 px-4 max-w-7xl mx-auto">
+      <div className="flex flex-col gap-6 py-6">
         {/* Header Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 mb-3">
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 mb-2">
             Affirmation Studio
           </h1>
-          <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
+          <p className="text-muted-foreground max-w-3xl mx-auto text-base leading-relaxed">
             Create personalized meditation experiences with AI-powered voices, healing frequencies, and custom affirmations
           </p>
         </div>
         
         {/* Main Content */}
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-          <div className="flex justify-center mb-8">
-            <TabsList className="grid w-auto grid-cols-2 bg-background/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
+          <div className="flex justify-center mb-6">
+            <TabsList className="grid w-fit grid-cols-2 bg-background/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
               <TabsTrigger 
                 value="customize" 
-                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all whitespace-nowrap"
               >
                 Create Meditation
               </TabsTrigger>
               <TabsTrigger 
                 value="preview" 
-                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all whitespace-nowrap"
               >
                 Preview & Refine
               </TabsTrigger>
@@ -371,37 +371,36 @@ export default function Home() {
             </div>
           </TabsContent>
           
-          <TabsContent value="preview" className="space-y-8">
+          <TabsContent value="preview" className="space-y-6">
               {meditation ? (
                 <div className="max-w-6xl mx-auto">
                   {/* Audio Player Section */}
-                  <Card className="bg-card/90 backdrop-blur-sm border-0 shadow-xl mb-8">
-                    <CardHeader className="text-center">
-                      <CardTitle className="text-3xl font-bold text-foreground mb-2">
+                  <Card className="bg-card/90 backdrop-blur-sm border-0 shadow-xl mb-6">
+                    <CardHeader className="text-center pb-4">
+                      <CardTitle className="text-2xl font-bold text-foreground mb-2">
                         {meditation.title}
                       </CardTitle>
-                      <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
+                      <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground mb-2">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full font-medium text-xs">
                           ~{meditation.estimatedDuration || Math.round((meditation.repetitionCount || 3) * 1.5 + 2)} minutes
                         </span>
-                        <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full font-medium">
+                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full font-medium text-xs">
                           {meditation.purpose}
                         </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
+                      
                       {/* Quick Mood Check-in Button */}
-                      <div className="mb-4 text-center">
-                        <Button
-                          onClick={handleStartMeditation}
-                          variant="outline"
-                          size="sm"
-                          className="mb-3 bg-gradient-to-r from-green-50 to-blue-50 hover:from-green-100 hover:to-blue-100 border-green-200 text-green-700"
-                        >
-                          <Heart className="mr-2 h-4 w-4" />
-                          Quick Mood Check-in
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={handleStartMeditation}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gradient-to-r from-green-50 to-blue-50 hover:from-green-100 hover:to-blue-100 border-green-200 text-green-700"
+                      >
+                        <Heart className="mr-2 h-4 w-4" />
+                        Quick Mood Check-in
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="pt-0">
                       
                       <AudioPlayer 
                         meditation={meditation} 
@@ -414,7 +413,7 @@ export default function Home() {
                   </Card>
 
                   {/* Refinement Options Grid */}
-                  <div className="grid lg:grid-cols-2 gap-8">
+                  <div className="grid lg:grid-cols-2 gap-6">
                     {/* Left Column - Script & Voice */}
                     <div className="space-y-6">
                       {/* Script Editor */}
