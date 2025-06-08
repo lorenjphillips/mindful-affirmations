@@ -17,7 +17,7 @@ import { type Meditation } from "@shared/schema";
 
 // Helper function to generate structured meditation content
 function generateStructuredMeditation(purpose: string, affirmationsText: string, repetitionCount: number) {
-  const baseIntro = "Welcome to this transformative meditation experience. Find a comfortable position where your body feels supported and your spine is straight.";
+  const baseIntro = "Find a comfortable position where your body feels supported and your spine is straight.";
   
   let scriptIntro = '';
   let breathingExercises: string[] = [];

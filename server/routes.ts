@@ -180,16 +180,28 @@ async function generateTextToSpeechAudio(
 
 // Helper function to add pauses to text for better meditation pacing
 function addPausesToText(text: string, pauseDuration: number): string {
-  // Convert pause duration to pause markers for ElevenLabs
-  // ElevenLabs uses <break time="Xs"/> for pauses
-  const pauseMarker = `<break time="${pauseDuration}s"/>`;
+  // For ElevenLabs, we don't use SSML break tags as they cause issues
+  // Instead, we add natural pauses using punctuation and spacing
+  const pauseText = "..."; // Natural pause indicator
   
-  // Split text by periods and insert pauses
-  return text
+  // Split text by periods and add natural breathing spaces
+  let processedText = text
     .split('.')
     .filter(sentence => sentence.trim().length > 0)
-    .map(sentence => sentence.trim() + '.' + pauseMarker)
-    .join(' ');
+    .map(sentence => sentence.trim() + '.')
+    .join(' ' + pauseText + ' ');
+  
+  // Add longer pauses for meditation transitions
+  processedText = processedText
+    .replace(/\. /g, '. ... ')  // Short pause after sentences
+    .replace(/\?\s/g, '? ... ')  // Pause after questions
+    .replace(/!\s/g, '! ... ')   // Pause after exclamations
+    .replace(/breathe/gi, '... breathe')  // Pause before breathing instructions
+    .replace(/imagine/gi, '... imagine')  // Pause before visualization
+    .replace(/feel/gi, '... feel')        // Pause before feeling instructions
+    .replace(/relax/gi, '... relax');     // Pause before relaxation cues
+  
+  return processedText;
 }
 
 // Simplified audio mixing function for predictable results

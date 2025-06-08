@@ -251,11 +251,18 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
         const audioElement = new Audio(meditation.audioUrl);
         audioElement.onloadeddata = () => {
           console.log('Premium audio loaded, starting playback');
-          audioElement.play().catch(err => {
-            console.error('Error playing premium audio:', err);
-            // Fallback to speech synthesis
+          
+          // Check if audio has actual content (duration > 0)
+          if (audioElement.duration > 0) {
+            audioElement.play().catch(err => {
+              console.error('Error playing premium audio:', err);
+              // Fallback to speech synthesis
+              startSpeechSynthesis();
+            });
+          } else {
+            console.log('Premium audio appears to be silent/empty, falling back to speech synthesis');
             startSpeechSynthesis();
-          });
+          }
         };
         
         audioElement.onended = () => {
@@ -268,6 +275,17 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
         audioElement.onerror = () => {
           console.log('Premium audio failed to load, falling back to speech synthesis');
           startSpeechSynthesis();
+        };
+        
+        // Add additional check for silent audio after a short delay
+        audioElement.oncanplaythrough = () => {
+          setTimeout(() => {
+            if (audioElement.duration === 0 || isNaN(audioElement.duration)) {
+              console.log('Premium audio duration is 0 or invalid, falling back to speech synthesis');
+              audioElement.pause();
+              startSpeechSynthesis();
+            }
+          }, 100);
         };
         
         // Store reference for pause/play control
@@ -497,27 +515,27 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
             console.log("No voices available at all, using browser default");
           }
           
-          // Adjust speech parameters for meditation - slower and more calming
+          // Adjust speech parameters for meditation - slower and more natural
           if (meditation.voiceStyle) {
             if (meditation.voiceStyle.includes('whisper')) {
-              utterance.volume = 0.7;
-              utterance.rate = 0.6; // Much slower for whisper meditation
-              utterance.pitch = 0.9; // Lower pitch for whisper
+              utterance.volume = 0.75;
+              utterance.rate = 0.7; // Slower but not too slow to avoid robotic sound
+              utterance.pitch = 0.95; // Natural pitch for whisper
             } else if (meditation.voiceStyle.includes('motivational')) {
-              utterance.volume = 0.9;
-              utterance.rate = 0.7; // Slower even for motivational
-              utterance.pitch = 1.05; // Slightly higher for motivational
+              utterance.volume = 0.85;
+              utterance.rate = 0.8; // Moderate speed for motivational
+              utterance.pitch = 1.0; // Natural pitch for motivational
             } else {
-              // Calm voice (default) - very slow and peaceful
+              // Calm voice (default) - slow but natural
               utterance.volume = 0.8;
-              utterance.rate = 0.6; // Very slow for meditation
-              utterance.pitch = 0.95; // Slightly lower for calming effect
+              utterance.rate = 0.75; // Slower but not too slow
+              utterance.pitch = 0.98; // Nearly natural pitch for calming effect
             }
           } else {
-            // Default meditation settings - prioritize calmness
+            // Default meditation settings - balanced for naturalness
             utterance.volume = 0.8;
-            utterance.rate = 0.6; // Very slow speech
-            utterance.pitch = 0.95;
+            utterance.rate = 0.75; // Moderate slow speech
+            utterance.pitch = 0.98; // Nearly natural pitch
           }
           
           // Set up events
@@ -611,7 +629,7 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
         speechSynthRef.current = null;
       }
     };
-  }, [isPlaying, meditation, duration, setIsPlaying]);
+  }, [isPlaying, meditation?.meditationScript, meditation?.audioUrl, duration, setIsPlaying]);
   
   // Toggle play/pause
   const togglePlayPause = () => {
