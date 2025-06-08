@@ -204,13 +204,51 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
     };
   }, [meditation]);
   
-  // Handle play/pause state
+    // Handle play/pause state
   useEffect(() => {
     if (!meditation || !meditation.meditationScript) return;
-    
+
     if (isPlaying) {
-      // Start background music with a simple backup approach
-      if (bgMusicRef.current) {
+      // Check if we have a premium audio URL from ElevenLabs first
+      if (meditation.audioUrl && meditation.audioUrl.includes('/api/audio/')) {
+        console.log('Using premium ElevenLabs audio:', meditation.audioUrl);
+        
+        // Create audio element for ElevenLabs audio
+        const audioElement = new Audio(meditation.audioUrl);
+        audioElement.onloadeddata = () => {
+          console.log('Premium audio loaded, starting playback');
+          audioElement.play().catch(err => {
+            console.error('Error playing premium audio:', err);
+            // Fallback to speech synthesis
+            startSpeechSynthesis();
+          });
+        };
+        
+        audioElement.onended = () => {
+          setIsPlaying(false);
+          if (onMeditationComplete) {
+            onMeditationComplete();
+          }
+        };
+        
+        audioElement.onerror = () => {
+          console.log('Premium audio failed to load, falling back to speech synthesis');
+          startSpeechSynthesis();
+        };
+        
+        // Store reference for pause/play control
+        speechSynthRef.current = audioElement as any;
+        return;
+      }
+      
+      // Fallback to speech synthesis if no premium audio
+      startSpeechSynthesis();
+      
+      function startSpeechSynthesis() {
+        console.log('Using speech synthesis fallback');
+        
+        // Start background music with a simple backup approach
+        if (bgMusicRef.current) {
         // Set a simple direct URL as a last resort if all else fails
         let musicType = meditation.backgroundMusic || 'gentle-piano';
         
@@ -512,6 +550,7 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
             }
           }
         }, 100);
+        }
       }
     } else {
       // Pause speech synthesis
@@ -559,7 +598,7 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
         <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden relative">
           <div className="w-full h-full flex items-center justify-center">
             <div className={cn(
-              "flex items-end space-x-1 h-full w-4/5 px-4 transition-all",
+              "flex items-end space-x-1 h-full w-full px-4 transition-all",
               isPlaying ? "opacity-100" : "opacity-50"
             )}>
               {/* Audio visualization bars that animate when playing */}

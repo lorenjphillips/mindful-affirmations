@@ -264,10 +264,13 @@ export default function Home() {
           body: JSON.stringify({
             meditationId: generatedMeditation.id || Date.now(),
             meditationScript: meditationScript.join(' '),
-            voiceStyle: generatedMeditation.voiceStyle ? generatedMeditation.voiceStyle : 'calm-female', 
+            voiceStyle: generatedMeditation.voiceStyle || 'calm-female',
+            exactVoiceName: generatedMeditation.exactVoiceName,
+            exactVoiceURI: generatedMeditation.exactVoiceURI,
             duration: generatedMeditation.estimatedDuration || Math.round((generatedMeditation.repetitionCount || 3) * 1.5 + 2),
             backgroundMusic: generatedMeditation.backgroundMusic || 'gentle-piano',
-            musicVolume: generatedMeditation.musicVolume || 50
+            musicVolume: generatedMeditation.musicVolume || 50,
+            pauseDuration: generatedMeditation.pauseDuration || 2
           })
         });
         
@@ -894,9 +897,22 @@ export default function Home() {
                   {/* Regenerate Button */}
                   <div className="text-center mt-8">
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         if (meditation) {
-                          handleGenerate(meditation);
+                          // Create updated meditation with current settings
+                          const updatedMeditation = {
+                            ...meditation,
+                            // Ensure we use the latest voice, music, and structure settings
+                            voiceStyle: meditation.voiceStyle,
+                            exactVoiceName: meditation.exactVoiceName,
+                            exactVoiceURI: meditation.exactVoiceURI,
+                            backgroundMusic: meditation.backgroundMusic,
+                            musicVolume: meditation.musicVolume,
+                            repetitionCount: meditation.repetitionCount,
+                            pauseDuration: meditation.pauseDuration
+                          };
+                          
+                          await handleGenerate(updatedMeditation);
                         }
                       }}
                       disabled={isGenerating}

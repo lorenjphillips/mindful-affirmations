@@ -31,7 +31,9 @@ async function generateTextToSpeechAudio(
   text: string, 
   voiceStyle: string, 
   duration: number, 
-  pauseDuration: number
+  pauseDuration: number,
+  exactVoiceName?: string,
+  exactVoiceURI?: string
 ): Promise<string> {
   try {
     console.log(`[Audio] Starting generation for voice style: ${voiceStyle}`);
@@ -42,38 +44,18 @@ async function generateTextToSpeechAudio(
       throw new Error("Missing ELEVENLABS_API_KEY - cannot generate speech without API credentials");
     }
     
-    // Enhanced voice mapping based on style keywords
-    let voiceId;
+    // Import and use the voice mapping service
+    const { getVoiceId } = await import('./services/voiceMapping');
     
-    // Default premium voices that sound great for meditation
-    console.log(`[Voice] Selecting voice for style: "${voiceStyle}"`);
-    if (!voiceStyle || voiceStyle === 'none' || voiceStyle === 'undefined') {
-      // If no voice style specified, default to a calm female voice
-      console.log(`[Voice] No valid voice style found, using default calm female voice`);
-      voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Charlotte - calm female
-    } else if (voiceStyle.includes('female')) {
-      if (voiceStyle.includes('calm')) {
-        voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Charlotte - calm female
-      } else if (voiceStyle.includes('whisper')) {
-        voiceId = '21m00Tcm4TlvDq8ikWAM'; // Rachel - soft, gentle female
-      } else if (voiceStyle.includes('motivational')) {
-        voiceId = 'yoZ06aMxZJJ28mfd3POQ'; // Bella - energetic female
-      } else {
-        voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Default female - Charlotte
-      }
-    } else if (voiceStyle.includes('male')) {
-      if (voiceStyle.includes('calm')) {
-        voiceId = 'VR6AewLTigWG4xSOukaG'; // Sam - calm male
-      } else if (voiceStyle.includes('whisper')) {
-        voiceId = 'pNInz6obpgDQGcFmaJgB'; // Adam - versatile male
-      } else if (voiceStyle.includes('motivational')) {
-        voiceId = 'ErXwobaYiN019PkySvjV'; // Antoni - strong male
-      } else {
-        voiceId = 'pNInz6obpgDQGcFmaJgB'; // Default male - Adam
-      }
-    } else {
-      // If voice style doesn't clearly indicate gender, default to a calm female voice
-      voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Charlotte - calm female
+    // Get the appropriate ElevenLabs voice ID
+    console.log(`[Voice] Selecting voice for style: "${voiceStyle}", exactVoiceName: "${exactVoiceName}"`);
+    let voiceId = getVoiceId(voiceStyle);
+    
+    // If we have exact voice information from VoicePreview component, prioritize that
+    if (exactVoiceName && exactVoiceURI) {
+      console.log(`[Voice] Using exact voice selection: ${exactVoiceName} (${exactVoiceURI})`);
+      // Note: For ElevenLabs integration, we still use our mapping, but log the exact choice
+      // In a future enhancement, we could support custom voice uploads here
     }
     
     console.log(`[Audio] Selected voice ID: ${voiceId} for style: ${voiceStyle || 'default'}`);
@@ -304,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate meditation audio endpoint (improved for reliability)
   app.post("/api/meditations/generate-audio", async (req, res) => {
     try {
-      const { meditationId, meditationScript, voiceStyle, duration, backgroundMusic, musicVolume } = req.body;
+      const { meditationId, meditationScript, voiceStyle, exactVoiceName, exactVoiceURI, duration, backgroundMusic, musicVolume, pauseDuration } = req.body;
 
       if (!meditationId || !meditationScript) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -355,7 +337,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               meditationScript, 
               voiceStyle || 'calm-female', 
               duration || 5,
-              meditation.pauseDuration || 2 // Use meditation's pause duration or default to 2
+              pauseDuration || meditation.pauseDuration || 2,
+              exactVoiceName,
+              exactVoiceURI
             ),
             timeoutPromise
           ]);
