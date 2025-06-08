@@ -2,9 +2,9 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --include=dev
 COPY . .
-RUN npm run build
+RUN npm run build:backend
 
 FROM node:20-alpine as runner
 WORKDIR /app
