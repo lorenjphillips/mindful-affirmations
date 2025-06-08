@@ -333,16 +333,16 @@ export default function Home() {
         {/* Main Content */}
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
           <div className="flex justify-center mb-8">
-            <TabsList className="grid w-auto grid-cols-2 bg-white/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
+            <TabsList className="grid w-auto grid-cols-2 bg-background/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
               <TabsTrigger 
                 value="customize" 
-                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
               >
                 Create Meditation
               </TabsTrigger>
               <TabsTrigger 
                 value="preview" 
-                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
               >
                 Preview & Refine
               </TabsTrigger>
@@ -432,7 +432,7 @@ export default function Home() {
                                 }
                                 setIsEditingScript(!isEditingScript);
                               }}
-                              className="bg-white/50"
+                              className="bg-background/50"
                             >
                               {isEditingScript ? "Save Changes" : "Edit Script"}
                             </Button>
@@ -457,7 +457,7 @@ export default function Home() {
                                   <Textarea
                                     value={editableIntro}
                                     onChange={(e) => setEditableIntro(e.target.value)}
-                                    className="min-h-[80px] bg-white/70"
+                                    className="min-h-[80px] bg-background/70"
                                     placeholder="Edit introduction..."
                                   />
                                 )}
@@ -479,7 +479,7 @@ export default function Home() {
                                   <Textarea
                                     value={editableBreathing}
                                     onChange={(e) => setEditableBreathing(e.target.value)}
-                                    className="min-h-[100px] bg-white/70"
+                                    className="min-h-[100px] bg-background/70"
                                     placeholder="Edit breathing exercises..."
                                   />
                                 )}
@@ -501,7 +501,7 @@ export default function Home() {
                                   <Textarea
                                     value={editableVisualization}
                                     onChange={(e) => setEditableVisualization(e.target.value)}
-                                    className="min-h-[120px] bg-white/70"
+                                    className="min-h-[120px] bg-background/70"
                                     placeholder="Edit visualization content..."
                                   />
                                 )}
@@ -523,7 +523,7 @@ export default function Home() {
                                   <Textarea
                                     value={editableAffirmations}
                                     onChange={(e) => setEditableAffirmations(e.target.value)}
-                                    className="min-h-[100px] bg-white/70"
+                                    className="min-h-[100px] bg-background/70"
                                     placeholder="Edit affirmations..."
                                   />
                                 )}
@@ -545,7 +545,7 @@ export default function Home() {
                                   <Textarea
                                     value={editableEnding}
                                     onChange={(e) => setEditableEnding(e.target.value)}
-                                    className="min-h-[80px] bg-white/70"
+                                    className="min-h-[80px] bg-background/70"
                                     placeholder="Edit ending..."
                                   />
                                 )}
