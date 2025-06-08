@@ -886,7 +886,7 @@ export default function MeditationForm({ onGenerate, initialValues, isGenerating
         {/* Submit Button */}
         <Button 
           type="submit" 
-          className="w-full"
+          className="w-full rainbow-glow text-white border-0 py-3 text-lg font-semibold transition-all duration-300"
           disabled={isGenerating}
         >
           {isGenerating ? (

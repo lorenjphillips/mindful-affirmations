@@ -318,15 +318,14 @@ export default function Home() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto pb-10 px-4 max-w-7xl">
+    <div className="pb-10 px-4 max-w-7xl mx-auto">
         <div className="flex flex-col gap-8 py-8">
           {/* Header Section */}
           <div className="text-center space-y-4">
             <h1 className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 mb-3">
               Affirmation Studio
             </h1>
-            <p className="text-slate-600 max-w-3xl mx-auto text-lg leading-relaxed">
+            <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
               Create personalized meditation experiences with AI-powered voices, healing frequencies, and custom affirmations
             </p>
           </div>
@@ -352,9 +351,9 @@ export default function Home() {
             
             <TabsContent value="customize" className="space-y-8">
               <div className="max-w-4xl mx-auto">
-                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-xl">
                   <CardHeader className="text-center pb-6">
-                    <CardTitle className="text-2xl font-bold text-slate-800">
+                    <CardTitle className="text-2xl font-bold text-foreground">
                       Design Your Perfect Meditation Experience
                     </CardTitle>
                   </CardHeader>
@@ -373,12 +372,12 @@ export default function Home() {
               {meditation ? (
                 <div className="max-w-6xl mx-auto">
                   {/* Audio Player Section */}
-                  <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl mb-8">
+                  <Card className="bg-card/90 backdrop-blur-sm border-0 shadow-xl mb-8">
                     <CardHeader className="text-center">
-                      <CardTitle className="text-3xl font-bold text-slate-800 mb-2">
+                      <CardTitle className="text-3xl font-bold text-foreground mb-2">
                         {meditation.title}
                       </CardTitle>
-                      <div className="flex items-center justify-center gap-4 text-sm text-slate-600">
+                      <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
                           ~{meditation.estimatedDuration || Math.round((meditation.repetitionCount || 3) * 1.5 + 2)} minutes
                         </span>
@@ -415,7 +414,7 @@ export default function Home() {
                     {/* Left Column - Script & Voice */}
                     <div className="space-y-6">
                       {/* Script Editor */}
-                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardHeader>
                           <div className="flex justify-between items-center">
                             <CardTitle className="text-xl">Meditation Script</CardTitle>
@@ -764,7 +763,7 @@ export default function Home() {
                       </Card>
 
                       {/* Voice Selection */}
-                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardHeader>
                           <CardTitle className="text-xl">Voice Selection</CardTitle>
                         </CardHeader>
@@ -789,7 +788,7 @@ export default function Home() {
                     {/* Right Column - Duration & Music */}
                     <div className="space-y-6">
                       {/* Repetition Control */}
-                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardHeader>
                           <CardTitle className="text-xl">Meditation Structure</CardTitle>
                         </CardHeader>
@@ -869,7 +868,7 @@ export default function Home() {
                       </Card>
 
                       {/* Background Music */}
-                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardHeader>
                           <CardTitle className="text-xl">Background Music</CardTitle>
                         </CardHeader>
@@ -909,24 +908,24 @@ export default function Home() {
                   </div>
 
                   {/* Meditation Details Summary */}
-                  <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-0 shadow-lg mt-8">
+                  <Card className="bg-gradient-to-r from-muted/30 to-accent/10 border-0 shadow-lg mt-8">
                     <CardContent className="p-6">
                       <div className="grid md:grid-cols-3 gap-6 text-center">
                         <div>
-                          <h4 className="font-semibold text-slate-700 mb-2">Voice Style</h4>
-                          <p className="text-sm text-slate-600">
+                          <h4 className="font-semibold text-foreground mb-2">Voice Style</h4>
+                          <p className="text-sm text-muted-foreground">
                             {voiceOptions.find(v => v.id === meditation.voiceStyle)?.name || 'Default Voice'}
                           </p>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-slate-700 mb-2">Background Music</h4>
-                          <p className="text-sm text-slate-600">
+                          <h4 className="font-semibold text-foreground mb-2">Background Music</h4>
+                          <p className="text-sm text-muted-foreground">
                             {musicOptions.find(m => m.id === meditation.backgroundMusic)?.name || 'No Music'}
                           </p>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-slate-700 mb-2">Affirmations</h4>
-                          <p className="text-sm text-slate-600">
+                          <h4 className="font-semibold text-foreground mb-2">Affirmations</h4>
+                          <p className="text-sm text-muted-foreground">
                             {meditation.selectedAffirmations && meditation.selectedAffirmations.length > 0 
                               ? `${meditation.selectedAffirmations.length} selected affirmations`
                               : meditation.customAffirmations 
@@ -940,12 +939,12 @@ export default function Home() {
                   </Card>
                 </div>
               ) : (
-                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-xl">
                   <CardContent className="text-center py-12">
-                    <h3 className="text-2xl font-bold text-slate-800 mb-4">
+                    <h3 className="text-2xl font-bold text-foreground mb-4">
                       No Meditation Created Yet
                     </h3>
-                    <p className="text-slate-600 mb-6">
+                    <p className="text-muted-foreground mb-6">
                       Create your first personalized meditation experience in the Customize tab.
                     </p>
                     <Button 

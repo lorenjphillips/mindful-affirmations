@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, MoonIcon, SunIcon, Home, BookOpen, HelpCircle, Info, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -10,18 +10,40 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [location] = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check localStorage or system preference
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode');
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    // Apply dark mode to document element
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    // Save to localStorage
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-    // In a real app, we'd toggle the class on the document
-    // document.documentElement.classList.toggle('dark');
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-purple-900 relative">
+      {/* Extended Background Gradient Overlay */}
+      <div className="fixed inset-0 w-full h-full bg-gradient-to-br from-blue-50/80 via-white/60 to-purple-50/80 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-purple-900/90 -z-10" />
+      
       {/* Header */}
-      <header className="bg-white shadow-soft py-4 px-6">
+      <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-soft py-4 px-6 relative z-10">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
@@ -31,17 +53,17 @@ const Layout = ({ children }: LayoutProps) => {
               <path d="M8 13h5"></path>
               <path d="M12 7v6"></path>
             </svg>
-            <h1 className="font-semibold text-xl sm:text-2xl">Affirmation Studio</h1>
+            <h1 className="font-semibold text-xl sm:text-2xl text-foreground">Affirmation Studio</h1>
           </div>
           
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/">
-              <a className={`${location === '/' ? 'text-accent' : 'text-neutral-600'} hover:text-accent transition-colors font-medium`}>
+              <a className={`${location === '/' ? 'text-accent' : 'text-muted-foreground'} hover:text-accent transition-colors font-medium`}>
                 Create
               </a>
             </Link>
             <Link href="/library">
-              <a className={`${location === '/library' ? 'text-accent' : 'text-neutral-600'} hover:text-accent transition-colors font-medium`}>
+              <a className={`${location === '/library' ? 'text-accent' : 'text-muted-foreground'} hover:text-accent transition-colors font-medium`}>
                 Library
               </a>
             </Link>
@@ -49,7 +71,7 @@ const Layout = ({ children }: LayoutProps) => {
               variant="ghost"
               size="icon"
               onClick={toggleDarkMode}
-              className="text-neutral-600 hover:text-accent"
+              className="text-muted-foreground hover:text-accent transition-colors"
             >
               {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
             </Button>
@@ -89,12 +111,12 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-6 md:py-8">
+      <main className="flex-grow container mx-auto px-4 py-6 md:py-8 relative z-10">
         {children}
       </main>
       
       {/* Footer */}
-      <footer className="bg-white border-t border-neutral-200 py-6">
+      <footer className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-border py-6 relative z-10">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row md:justify-between items-center">
             <div className="mb-4 md:mb-0">
@@ -106,19 +128,19 @@ const Layout = ({ children }: LayoutProps) => {
                   <path d="M8 13h5"></path>
                   <path d="M12 7v6"></path>
                 </svg>
-                <span className="font-semibold text-lg">Affirmation Studio</span>
+                <span className="font-semibold text-lg text-foreground">Affirmation Studio</span>
               </div>
-              <p className="text-neutral-500 text-sm mt-1">Personalized meditations for mind and soul</p>
+              <p className="text-muted-foreground text-sm mt-1">Personalized meditations for mind and soul</p>
             </div>
             
             <div className="flex gap-6">
-              <a href="#" className="text-neutral-600 hover:text-accent transition-colors flex items-center">
+              <a href="#" className="text-muted-foreground hover:text-accent transition-colors flex items-center">
                 <HelpCircle className="w-4 h-4 mr-1" /> Help
               </a>
-              <a href="#" className="text-neutral-600 hover:text-accent transition-colors flex items-center">
+              <a href="#" className="text-muted-foreground hover:text-accent transition-colors flex items-center">
                 <Info className="w-4 h-4 mr-1" /> About
               </a>
-              <a href="#" className="text-neutral-600 hover:text-accent transition-colors flex items-center">
+              <a href="#" className="text-muted-foreground hover:text-accent transition-colors flex items-center">
                 <Mail className="w-4 h-4 mr-1" /> Contact
               </a>
             </div>

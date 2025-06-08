@@ -132,3 +132,71 @@
   opacity: 0.6;
   border-radius: 1px;
 }
+
+/* Apple Intelligence-style rainbow glow effect */
+@keyframes rainbow-pulse {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes rainbow-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.rainbow-glow {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: 200% 200%;
+  animation: rainbow-pulse 3s ease-in-out infinite;
+}
+
+.rainbow-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: conic-gradient(
+    from 0deg,
+    #ff6b6b,
+    #feca57,
+    #48dbfb,
+    #ff9ff3,
+    #54a0ff,
+    #5f27cd,
+    #00d2d3,
+    #ff9f43,
+    #ff6b6b
+  );
+  border-radius: inherit;
+  z-index: -1;
+  animation: rainbow-rotate 3s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.rainbow-glow:hover::before,
+.rainbow-glow:focus::before {
+  opacity: 1;
+}
+
+.rainbow-glow:hover,
+.rainbow-glow:focus {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 
+    0 0 20px rgba(102, 126, 234, 0.4),
+    0 0 40px rgba(118, 75, 162, 0.3),
+    0 0 60px rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
+}
