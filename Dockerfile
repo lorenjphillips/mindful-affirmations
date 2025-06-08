@@ -19,8 +19,8 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 # Install only production dependencies
 RUN npm ci --only=production
 
-# Expose the application port
-EXPOSE 5000
+# Expose the application port (Render will set PORT env var)
+EXPOSE 10000
 
 # Start the application
 CMD ["node", "dist/index.js"]
