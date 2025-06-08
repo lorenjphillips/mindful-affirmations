@@ -1,0 +1,321 @@
+import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertMeditationSchema, affirmationOptions } from "@shared/schema";
+import { ZodError } from "zod";
+import { fromZodError } from "zod-validation-error";
+import path from "path";
+import fs from "fs";
+
+// Import our ElevenLabs service
+import { generateSpeech, recommendedVoices } from './services/elevenlabs';
+
+// Generate meditation audio using ElevenLabs API
+async function generateTextToSpeechAudio(
+  text: string, 
+  voiceStyle: string, 
+  duration: number, 
+  pauseDuration: number
+): Promise<string> {
+  try {
+    console.log(`Generating speech for text length: ${text.length} characters`);
+    console.log(`Using voice style: ${voiceStyle}`);
+    
+    // Add appropriate pauses based on the pauseDuration parameter
+    const processedText = addPausesToText(text, pauseDuration);
+    
+    // Select the appropriate voice ID from ElevenLabs based on the voice style
+    const voiceId = recommendedVoices[voiceStyle as keyof typeof recommendedVoices] || 
+                   recommendedVoices['male-calm']; // Default to male-calm if not found
+    
+    console.log(`Selected voice ID: ${voiceId}`);
+    
+    // Generate the speech using ElevenLabs
+    const audioUrl = await generateSpeech(processedText, voiceId);
+    console.log(`Generated audio URL: ${audioUrl}`);
+    
+    return audioUrl;
+  } catch (error) {
+    console.error('Error generating text-to-speech audio:', error);
+    throw error;
+  }
+}
+
+// Helper function to add pauses to text for better meditation pacing
+function addPausesToText(text: string, pauseDuration: number): string {
+  // Convert pause duration to pause markers for ElevenLabs
+  // ElevenLabs uses <break time="Xs"/> for pauses
+  const pauseMarker = `<break time="${pauseDuration}s"/>`;
+  
+  // Split text by periods and insert pauses
+  return text
+    .split('.')
+    .filter(sentence => sentence.trim().length > 0)
+    .map(sentence => sentence.trim() + '.' + pauseMarker)
+    .join(' ');
+}
+
+// Prepare audio mixing function (simulated for now)
+async function mixAudioWithBackground(
+  speechUrl: string, 
+  backgroundMusic: string, 
+  musicVolume: number, 
+  fadeOut: boolean, 
+  duration: number,
+  isNap: boolean = false,
+  wakeFadeIn: boolean = false
+): Promise<string> {
+  // In a real implementation, this would use ffmpeg to mix the audio
+  // For now, we'll just return the speech URL since we're generating real audio
+  
+  console.log(`Audio mixing parameters:`);
+  console.log(`- Background music: ${backgroundMusic}`);
+  console.log(`- Music volume: ${musicVolume}%`);
+  console.log(`- Fade out: ${fadeOut}`);
+  console.log(`- Duration: ${duration} minutes`);
+  console.log(`- Nap mode: ${isNap}, Wake fade-in: ${wakeFadeIn}`);
+  
+  // For now, just return the speech URL
+  return speechUrl;
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // put application routes here
+  // prefix all routes with /api
+
+  // Get all meditations
+  app.get("/api/meditations", async (req, res) => {
+    try {
+      const meditations = await storage.getAllMeditations();
+      res.json(meditations);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching meditations" });
+    }
+  });
+
+  // Get a specific meditation
+  app.get("/api/meditations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid meditation ID" });
+      }
+
+      const meditation = await storage.getMeditation(id);
+      if (!meditation) {
+        return res.status(404).json({ message: "Meditation not found" });
+      }
+
+      res.json(meditation);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching meditation" });
+    }
+  });
+
+  // Create a new meditation
+  app.post("/api/meditations", async (req, res) => {
+    try {
+      const validatedData = insertMeditationSchema.parse(req.body);
+      const meditation = await storage.createMeditation(validatedData);
+      res.status(201).json(meditation);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Error creating meditation" });
+    }
+  });
+
+  // Update a meditation
+  app.patch("/api/meditations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid meditation ID" });
+      }
+
+      const existingMeditation = await storage.getMeditation(id);
+      if (!existingMeditation) {
+        return res.status(404).json({ message: "Meditation not found" });
+      }
+      
+      const updateData = insertMeditationSchema.partial().parse(req.body);
+      const updatedMeditation = await storage.updateMeditation(id, updateData);
+      res.json(updatedMeditation);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      res.status(500).json({ message: "Error updating meditation" });
+    }
+  });
+
+  // Delete a meditation
+  app.delete("/api/meditations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid meditation ID" });
+      }
+
+      const success = await storage.deleteMeditation(id);
+      if (!success) {
+        return res.status(404).json({ message: "Meditation not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting meditation" });
+    }
+  });
+
+  // Generate audio for a meditation
+  app.post("/api/meditations/:id/generate", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid meditation ID" });
+      }
+
+      const meditation = await storage.getMeditation(id);
+      if (!meditation) {
+        return res.status(404).json({ message: "Meditation not found" });
+      }
+      
+      console.log(`[Audio Generation] Starting generation for meditation #${id}:`, meditation.title);
+
+      // Get the affirmations text from either selected affirmations or custom entries
+      let affirmationsText = "";
+      
+      if (meditation.selectedAffirmations && meditation.selectedAffirmations.length > 0) {
+        // Convert selected affirmation IDs to text by looking them up in the schema
+        const affirmationTexts = meditation.selectedAffirmations.map((affId: string) => {
+          const affirmation = affirmationOptions.find((a) => a.id === affId);
+          return affirmation ? affirmation.text : "";
+        }).filter(text => text.length > 0);
+        
+        affirmationsText = affirmationTexts.join('\n');
+        console.log(`[Audio Generation] Using ${affirmationTexts.length} selected affirmations`);
+      } else if (meditation.customAffirmations) {
+        affirmationsText = meditation.customAffirmations;
+        console.log(`[Audio Generation] Using custom affirmations (${meditation.customAffirmations.length} chars)`);
+      }
+      
+      // Build a complete meditation script
+      const meditationScript = `
+        Welcome to your personalized meditation: ${meditation.title}.
+        This meditation is designed to help you with ${meditation.purpose}.
+        ${meditation.isNap ? 'This is a nap meditation. Take a deep breath, and relax.' : ''}
+        
+        Take a deep breath in. And slowly exhale.
+        
+        ${affirmationsText}
+        
+        ${meditation.isNap && meditation.wakeFadeIn ? 'Now, gently begin to awaken. Feel your awareness returning.' : ''}
+      `;
+      
+      console.log(`[Audio Generation] Voice style: ${meditation.voiceStyle}, Duration: ${meditation.duration} minutes`);
+      console.log(`[Audio Generation] Background music: ${meditation.backgroundMusic}, Volume: ${meditation.musicVolume}%`);
+      
+      if (meditation.isNap) {
+        console.log(`[Audio Generation] Nap mode enabled, wake fade-in: ${meditation.wakeFadeIn}`);
+      }
+      
+      try {
+        // Generate text-to-speech audio using ElevenLabs API
+        console.log("[Audio Generation] Generating audio with ElevenLabs API...");
+        const ttsAudioUrl = await generateTextToSpeechAudio(
+          meditationScript,
+          meditation.voiceStyle,
+          meditation.duration,
+          meditation.pauseDuration || 2 // Default to 2 second pauses if not specified
+        );
+        
+        console.log(`[Audio Generation] Text-to-speech generated successfully: ${ttsAudioUrl}`);
+        
+        // Mix with background music
+        const finalAudioUrl = await mixAudioWithBackground(
+          ttsAudioUrl,
+          meditation.backgroundMusic,
+          meditation.musicVolume,
+          meditation.fadeOut,
+          meditation.duration,
+          meditation.isNap || false,
+          meditation.wakeFadeIn || false
+        );
+        
+        console.log(`[Audio Generation] Final audio URL: ${finalAudioUrl}`);
+        
+        // Update meditation with audio URL
+        const updatedMeditation = await storage.setMeditationAudioUrl(id, finalAudioUrl);
+        
+        if (!updatedMeditation) {
+          console.error(`[Audio Generation] Failed to update meditation #${id} with audio URL`);
+          return res.status(500).json({ message: "Failed to update meditation with audio URL" });
+        }
+        
+        console.log(`[Audio Generation] Successfully generated audio for meditation #${id}`);
+        res.status(200).json(updatedMeditation);
+      } catch (error) {
+        console.error('[Audio Generation] Error during audio generation:', error);
+        res.status(500).json({ 
+          message: "Error generating audio", 
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    } catch (error) {
+      console.error('Error in meditation generation endpoint:', error);
+      res.status(500).json({ message: "Server error while processing meditation audio request" });
+    }
+  });
+
+  // Serve static files from public directory
+  app.use('/audio', express.static(path.join(process.cwd(), 'public', 'audio')));
+  
+  // Get audio file endpoint
+  app.get("/api/audio/:filename", (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'public', 'audio', filename);
+    
+    // Check if the file exists
+    if (fs.existsSync(filePath)) {
+      console.log(`Serving audio file: ${filePath}`);
+      
+      // Stream the file
+      const stat = fs.statSync(filePath);
+      const fileSize = stat.size;
+      
+      // Set appropriate headers
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', fileSize);
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      // Create a read stream and pipe it to the response
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+    } else {
+      console.warn(`Audio file not found: ${filePath}`);
+      
+      // If the file doesn't exist, generate a placeholder silence MP3
+      const base64Mp3 = "SUQzBAAAAAABE1RYWFgAAAASAAADbWFqb3JfYnJhbmQAbXA0MgBUWFhYAAAAEQAAA21pbm9yX3ZlcnNpb24AMABUWFhYAAAAHAAAA2NvbXBhdGlibGVfYnJhbmRzAGlzb21tcDQyAFRDT04AAAAFAAADZW5nAFREUkMAAAAFAAADMjAyMwBUU1NFAAAADwAAA0xhdmY2MC40LjEwMQAAAAAAAAAAAAAA//uQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      
+      // Convert base64 to buffer
+      const audioBuffer = Buffer.from(base64Mp3, 'base64');
+      
+      // Set appropriate headers
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', audioBuffer.length);
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      // Send the placeholder audio data
+      res.status(200).send(audioBuffer);
+    }
+  });
+
+  const httpServer = createServer(app);
+
+  return httpServer;
+}

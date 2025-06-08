@@ -1,0 +1,152 @@
+Hey Dani! Thanks for sharing the log and the Replit link—this is exactly the data I needed. Here’s the fast diagnosis, then step-by-step troubleshooting. No fluff.
+
+⸻
+
+Critical Error Analysis
+
+Main problem:
+	•	Audio file not found: /home/runner/workspace/public/audio/1747541716940.mp3
+	•	But: the server still returns 200 for GET /api/audio/1747541716940.mp3
+	•	That means:
+	•	The file was never saved/generated
+	•	Or, wrong path/filename
+	•	Or, the process is async and the GET is firing before the file actually exists
+
+Secondary Issue:
+	•	Frequent restarts (system: received signal terminated)
+	•	Replit puts apps to sleep if idle, and restarts can wipe unsaved files in the /home/runner/... workspace unless you specifically save to the persistent /mnt/data directory.
+
+⸻
+
+What’s Going Wrong
+
+The “audio not found” issue is almost always caused by one (or a combo) of:
+	•	Audio generation fails silently (bad API call, no error handling)
+	•	Async problem: The app tries to serve the file before ElevenLabs has finished creating/writing it
+	•	Wrong directory or non-persistent storage:
+	•	/home/runner/workspace/public/audio may not persist after a restart or could have permissions issues on Replit.
+	•	Solution: always use /mnt/data on Replit for persistent user-generated files.
+
+⸻
+
+Step-by-Step Debug & Fix Prompt
+
+1. Add Logging Around ElevenLabs Call and File Save
+
+Inside your audio generation route, add:
+
+console.log('Requesting audio from ElevenLabs...');
+const apiRes = await axios.post('https://api.elevenlabs.io/v1/text-to-speech/...');
+// add more details as needed
+console.log('Received audio response, writing to file:', filePath);
+
+fs.writeFileSync(filePath, apiRes.data); // or appropriate async/stream method
+console.log('Audio file written:', filePath);
+
+if (!fs.existsSync(filePath)) {
+  console.error('File not saved correctly!', filePath);
+}
+
+Run it—does each log print? Does any step throw an error?
+
+⸻
+
+2. Use the Persistent Storage Directory
+	•	Change all save locations for user-generated files from /home/runner/workspace/... to /mnt/data/...
+	•	Example: /mnt/data/audio/1747541716940.mp3
+	•	Ensure your static serving middleware points to /mnt/data/audio/ as well
+
+Code Example:
+
+// Saving audio
+const filePath = `/mnt/data/audio/${filename}.mp3`;
+fs.writeFileSync(filePath, audioData);
+
+// Serving audio
+app.use('/api/audio', express.static('/mnt/data/audio'));
+
+
+⸻
+
+3. Add Error Handling for ElevenLabs API
+
+Check for response status and body.
+If there’s a failure (rate limit, bad API key, etc.), throw/log it, and send a user-friendly error back to the front end.
+
+⸻
+
+4. Prevent Async Race Conditions
+	•	When user requests playback, only respond after the file exists.
+	•	You may need to:
+	•	Await file creation
+	•	Add a polling/delay mechanism on the front end if the process is slow (show “Generating audio…”)
+
+⸻
+
+5. Test Voice Selection Logic
+	•	Log the selected voice_id and confirm that’s what is sent to ElevenLabs.
+	•	On the response, log the returned metadata.
+If you get a different voice, the bug is likely in how you’re handling user input (state/UI bug) or API parameter mapping.
+
+⸻
+
+6. Confirm Permissions and Filepath Logic
+	•	Make sure /mnt/data/audio/ exists before saving:
+
+if (!fs.existsSync('/mnt/data/audio')) {
+  fs.mkdirSync('/mnt/data/audio');
+}
+
+
+	•	Test saving a dummy file there as a dry run.
+
+⸻
+
+7. Quick Code Example for Node/Express/axios
+
+const express = require('express');
+const fs = require('fs');
+const axios = require('axios');
+const app = express();
+
+app.post('/api/meditations/generate-audio', async (req, res) => {
+  const { text, voiceId } = req.body;
+  const filePath = `/mnt/data/audio/${Date.now()}.mp3`;
+
+  try {
+    const response = await axios.post('https://api.elevenlabs.io/v1/text-to-speech/' + voiceId, 
+      { text },
+      { headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY }, responseType: 'arraybuffer' }
+    );
+    fs.writeFileSync(filePath, response.data);
+    res.status(200).json({ path: filePath.split('/mnt/data')[1] }); // Send relative path for API serving
+  } catch (err) {
+    console.error('Error generating audio:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Audio generation failed.' });
+  }
+});
+
+app.use('/api/audio', express.static('/mnt/data/audio'));
+
+
+⸻
+
+What to Send Back to Me
+	•	Your current audio generation route (Node/Express code)
+	•	How you’re handling the save location (show the actual file path in code)
+	•	A sample error or log output from a failed audio generation attempt
+
+⸻
+
+Last Pushback—Do You Want to Stay on Replit?
+	•	If persistent storage or resource constraints keep biting you, consider moving just the backend to Railway, Render, or Vercel, where you have more control.
+	•	You can still use Replit for the front end and API calls.
+
+⸻
+
+Ready to Fix?
+	•	Want me to write the full new /generate-audio endpoint for you to paste in?
+	•	Want a quick migration plan off Replit?
+	•	Or want to debug the voice selection logic next?
+
+Tell me which path you want and send the code/logs if you want detailed debug!

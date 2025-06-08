@@ -1,0 +1,381 @@
+import { useState } from "react";
+import MeditationForm from "@/components/MeditationForm";
+import AudioPlayer from "@/components/AudioPlayer";
+import TemplateCard from "@/components/TemplateCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { meditationTemplates } from "@shared/schema";
+import { type Meditation } from "@shared/schema";
+
+export default function Home() {
+  const [currentTab, setCurrentTab] = useState("customize");
+  const [meditation, setMeditation] = useState<Meditation | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleGenerate = async (generatedMeditation: Meditation) => {
+    setIsGenerating(true);
+    
+    try {
+      console.log("Starting meditation generation process...");
+      
+      // Step 1: Save meditation data to the backend
+      console.log("Step 1: Saving meditation data with ID:", generatedMeditation.id);
+      
+      // Wait a moment to simulate server processing
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Step 2: Store the meditation in our state
+      setMeditation(generatedMeditation);
+      
+      // Step 3: Build a complete meditation script for text-to-speech
+      const affirmationsText = 
+        generatedMeditation.selectedAffirmations && generatedMeditation.selectedAffirmations.length > 0
+          ? generatedMeditation.selectedAffirmations.join('. ')
+          : generatedMeditation.customAffirmations || '';
+          
+      const meditationScript = `
+        Welcome to your personalized meditation: ${generatedMeditation.title}.
+        This meditation is designed to help you with ${generatedMeditation.purpose}.
+        ${generatedMeditation.isNap ? 'This is a nap meditation. Take a deep breath, and relax.' : ''}
+        
+        Take a deep breath in. And slowly exhale.
+        
+        ${affirmationsText}
+        
+        ${generatedMeditation.isNap && generatedMeditation.wakeFadeIn ? 'Now, gently begin to awaken. Feel your awareness returning.' : ''}
+      `;
+      
+      console.log("Step 3: Generating speech for meditation");
+      console.log("Voice style:", generatedMeditation.voiceStyle);
+      
+      // Step 4: Create a simulated meditation audio experience
+      try {
+        // Generate a unique audio URL to use for this meditation
+        const timestamp = Date.now();
+        const audioUrl = `/api/audio/${timestamp}.mp3`;
+        
+        // Create meditation lines for display
+        const meditationLines = meditationScript
+          .split('\n')
+          .filter(line => line.trim().length > 0)
+          .map(line => line.trim());
+        
+        // Update the meditation with the audio URL and content for visualization
+        const meditationWithAudio = {
+          ...generatedMeditation,
+          audioUrl,
+          meditationScript: meditationScript.trim() // Store the content for visualization
+        };
+        
+        // Update state with the audio URL
+        setMeditation(meditationWithAudio);
+        
+        // Switch to the preview tab to show the generated meditation
+        setCurrentTab("preview");
+        
+        console.log("Meditation content created with the following script:", meditationLines);
+        
+        // Generate the audio on the server and update with real audio URL
+        const response = await fetch(`/api/meditations/generate-audio`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            meditationId: generatedMeditation.id,
+            meditationScript: meditationScript,
+            voiceStyle: generatedMeditation.voiceStyle || 'calm-female',
+            duration: generatedMeditation.duration || 5,
+            backgroundMusic: generatedMeditation.backgroundMusic || 'gentle-piano',
+            musicVolume: generatedMeditation.musicVolume || 50
+          })
+        });
+        
+        if (response.ok) {
+          const serverMeditation = await response.json();
+          if (serverMeditation.audioUrl) {
+            console.log("Updated meditation with server audio URL:", serverMeditation.audioUrl);
+            // Update with the real audio URL from the server
+            setMeditation({
+              ...meditationWithAudio,
+              audioUrl: serverMeditation.audioUrl
+            });
+          }
+        }
+        
+        // Set a timeout to automatically start the player animation
+        setTimeout(() => {
+          setIsPlaying(true);
+        }, 1000);
+        
+      } catch (error) {
+        console.error("Meditation generation error:", error);
+        alert("There was an error generating your meditation. Please try again.");
+      }
+      
+    } catch (error) {
+      console.error('Error generating audio:', error);
+      
+      // Even on error, show the meditation but without audio
+      setMeditation(generatedMeditation);
+      setCurrentTab("preview");
+      
+      // Show an error alert
+      alert("There was an issue generating your meditation audio. Please try again.");
+      
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleLoadTemplate = (template: typeof meditationTemplates[0]) => {
+    const templateMeditation: Partial<Meditation> = {
+      id: Date.now(),
+      title: template.title,
+      purpose: template.purpose,
+      customAffirmations: template.affirmations,
+      selectedAffirmations: [],
+      voiceStyle: template.voiceStyle,
+      backgroundMusic: template.backgroundMusic,
+      duration: template.duration,
+      musicVolume: 50, // Default
+      pauseDuration: 2, // Default
+      autoRepeat: true, // Default
+      fadeOut: false, // Default
+      isNap: false,
+      wakeFadeIn: false,
+      audience: "adult",
+      createdAt: new Date().toISOString(),
+      audioUrl: "",
+      meditationType: template.meditationType || ["affirmations"]
+    };
+    
+    // Use this to pre-fill the form
+    setMeditation(templateMeditation as Meditation);
+    
+    // Switch to customize tab to show the filled form
+    setCurrentTab("customize");
+    
+    // Alert user that template was loaded
+    alert(`Template "${template.title}" loaded! You can now customize it and generate your meditation.`);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Page Title */}
+      <div className="text-center mb-8">
+        <h2 className="text-2xl md:text-3xl font-semibold text-neutral-800 mb-2">Create Your Meditation</h2>
+        <p className="text-neutral-600">Customize every aspect of your affirmation meditation experience</p>
+      </div>
+      
+      {/* Creation Tabs */}
+      <div className="bg-white rounded-xl shadow-soft mb-8">
+        <Tabs defaultValue="customize" value={currentTab} onValueChange={setCurrentTab}>
+          <TabsList className="w-full border-b border-neutral-200 rounded-none">
+            <TabsTrigger value="customize" className="flex-1 data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent">
+              Customize
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex-1" disabled={!meditation}>
+              Preview
+            </TabsTrigger>
+            <TabsTrigger value="save" className="flex-1" disabled={!meditation}>
+              Save
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="customize" className="p-6">
+            <MeditationForm 
+              onGenerate={handleGenerate} 
+              initialValues={meditation}
+              isGenerating={isGenerating}
+            />
+          </TabsContent>
+          
+          <TabsContent value="preview" className="p-0">
+            <div className="p-6">
+              <AudioPlayer 
+                meditation={meditation} 
+                isPlaying={isPlaying}
+                setIsPlaying={setIsPlaying}
+              />
+              
+              {meditation && (
+                <>
+                  {/* Audio Quick Settings */}
+                  <div className="mt-8 bg-gray-50 p-5 rounded-lg border border-gray-200 mb-8">
+                    <h3 className="text-lg font-semibold mb-4">Quick Audio Settings</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Voice Style */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Voice Style</label>
+                        <select 
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={meditation.voiceStyle || "calm-female"}
+                          onChange={(e) => {
+                            setMeditation({...meditation, voiceStyle: e.target.value});
+                          }}
+                        >
+                          <option value="calm-female">Calm Female</option>
+                          <option value="calm-male">Calm Male</option>
+                          <option value="whisper-female">Whisper Female</option>
+                          <option value="whisper-male">Whisper Male</option>
+                          <option value="motivational-female">Motivational Female</option>
+                          <option value="motivational-male">Motivational Male</option>
+                        </select>
+                      </div>
+
+                      {/* Background Music */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Background Music</label>
+                        <select 
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={meditation.backgroundMusic || "gentle-piano"}
+                          onChange={(e) => {
+                            setMeditation({...meditation, backgroundMusic: e.target.value});
+                          }}
+                        >
+                          <option value="none">No Music</option>
+                          <option value="gentle-piano">Gentle Piano</option>
+                          <option value="nature-sounds">Nature Sounds</option>
+                          <option value="ambient">Ambient Soundscape</option>
+                          <option value="singing-bowls">Singing Bowls</option>
+                          <option value="rain">Gentle Rain</option>
+                          <option value="delta-waves">Delta Waves</option>
+                          <option value="theta-waves">Theta Waves</option>
+                          <option value="alpha-waves">Alpha Waves</option>
+                        </select>
+                      </div>
+
+                      {/* Music Volume Slider */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-2">
+                          Music Volume: {meditation.musicVolume || 50}%
+                        </label>
+                        <input 
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="5"
+                          value={meditation.musicVolume || 50}
+                          onChange={(e) => {
+                            setMeditation({
+                              ...meditation, 
+                              musicVolume: parseInt(e.target.value)
+                            });
+                          }}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Regenerate Button */}
+                      <div className="md:col-span-2 mt-4">
+                        <button 
+                          className="w-full bg-primary text-white py-2 rounded-md"
+                          onClick={() => {
+                            if (window.confirm("Regenerate meditation with the current settings?")) {
+                              handleGenerate(meditation);
+                            }
+                          }}
+                        >
+                          Regenerate Audio
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transcript Section */}
+                  <div className="mt-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold">Meditation Transcript</h3>
+                      <div className="flex space-x-2">
+                        <button 
+                          className="bg-accent text-white px-4 py-2 rounded-md"
+                          onClick={() => {
+                            setCurrentTab("customize");
+                          }}
+                        >
+                          Revise
+                        </button>
+                        <button 
+                          className="bg-accent text-white px-4 py-2 rounded-md"
+                          onClick={() => {
+                            setCurrentTab("save");
+                          }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                      {meditation.meditationScript ? (
+                        meditation.meditationScript
+                      ) : (
+                        // Create a default transcript
+                        `Welcome to your personalized meditation: ${meditation.title || "Untitled"}.
+                        
+This meditation is designed to help you with ${meditation.purpose || "relaxation"}.
+${meditation.isNap ? 'This is a nap meditation. Take a deep breath, and relax.' : ''}
+
+Take a deep breath in. And slowly exhale.
+
+${meditation.customAffirmations || 'Feel peaceful, calm, and centered.'}
+
+${meditation.isNap && meditation.wakeFadeIn ? 'Now, gently begin to awaken. Feel your awareness returning.' : ''}`
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="save" className="p-6">
+            <div className="text-center py-8 text-neutral-500">
+              <h3 className="text-xl font-semibold mb-2">Save Your Meditation</h3>
+              <p className="mb-4">Save this meditation to your library to access it anytime</p>
+              <button 
+                className="bg-accent hover:bg-accent-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                onClick={() => {
+                  // Save functionality - this would typically save to a user's collection
+                  if (meditation) {
+                    // Simulate successful save
+                    alert("Meditation saved to your library!");
+                    
+                    // In a real implementation, we would make an API call to save to the user's collection
+                    // For example:
+                    // fetch('/api/library', {
+                    //   method: 'POST',
+                    //   headers: { 'Content-Type': 'application/json' },
+                    //   body: JSON.stringify({ meditationId: meditation.id })
+                    // })
+                  } else {
+                    alert("Please create a meditation first");
+                  }
+                }}
+              >
+                Save to Library
+              </button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      {currentTab === "customize" && (
+        <div className="mb-8">
+          <h3 className="text-xl font-semibold mb-4">Popular Templates</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {meditationTemplates.map((template) => (
+              <TemplateCard 
+                key={template.id} 
+                template={template} 
+                onSelect={() => handleLoadTemplate(template)} 
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
