@@ -580,7 +580,7 @@ export default function MeditationForm({ onGenerate, initialValues, isGenerating
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-5">
           <h3 className="text-lg font-medium mb-4">Affirmations</h3>
           <div className="space-y-4">
-            {/* Selected Affirmations */}
+            {/* Selected Affirmations with Compact Multi-Select */}
             <FormField
               control={form.control}
               name="selectedAffirmations"
@@ -588,38 +588,96 @@ export default function MeditationForm({ onGenerate, initialValues, isGenerating
                 <FormItem>
                   <FormLabel className="text-base">Choose Affirmations</FormLabel>
                   <div className="mb-2 text-sm text-neutral-600">
-                    Select affirmations that resonate with you
+                    Select from our curated affirmations
                   </div>
-                  <div className="space-y-3">
-                    {affirmationOptions.map(affirmation => (
-                      <FormField
-                        key={affirmation.id}
-                        control={form.control}
-                        name="selectedAffirmations"
-                        render={() => (
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(affirmation.id)}
-                                onCheckedChange={(checked) => {
+                  
+                  {/* Selected Affirmations Display */}
+                  {field.value && field.value.length > 0 && (
+                    <div className="mb-3 p-3 bg-white rounded-lg border">
+                      <div className="text-sm font-medium text-blue-800 mb-2">
+                        Selected ({field.value.length} affirmations):
+                      </div>
+                      <div className="space-y-1 max-h-24 overflow-y-auto">
+                        {field.value.map((affirmationId: string) => {
+                          const affirmation = affirmationOptions.find(a => a.id === affirmationId);
+                          return affirmation ? (
+                            <div key={affirmationId} className="flex items-center justify-between text-sm bg-blue-50 px-2 py-1 rounded">
+                              <span className="flex-1 mr-2">{affirmation.text}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
                                   const currentValues = field.value || [];
-                                  
-                                  if (checked) {
-                                    field.onChange([...currentValues, affirmation.id]);
-                                  } else {
-                                    field.onChange(currentValues.filter(value => value !== affirmation.id));
-                                  }
+                                  field.onChange(currentValues.filter(id => id !== affirmationId));
                                 }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal">
+                                className="text-blue-600 hover:text-blue-800 font-bold"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Dropdown to Add More Affirmations */}
+                  <Select
+                    onValueChange={(value) => {
+                      const currentValues = field.value || [];
+                      if (!currentValues.includes(value)) {
+                        field.onChange([...currentValues, value]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Add an affirmation..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {affirmationOptions
+                        .filter(affirmation => !field.value?.includes(affirmation.id))
+                        .map((affirmation) => (
+                          <SelectItem key={affirmation.id} value={affirmation.id}>
+                            <div className="text-sm">
                               {affirmation.text}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      {affirmationOptions.filter(affirmation => !field.value?.includes(affirmation.id)).length === 0 && (
+                        <div className="p-2 text-sm text-gray-500 text-center">
+                          All affirmations selected
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Quick Action Buttons */}
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Add 3 popular affirmations
+                        const popularIds = affirmationOptions.slice(0, 3).map(a => a.id);
+                        const currentValues = field.value || [];
+                        const newValues = [...new Set([...currentValues, ...popularIds])];
+                        field.onChange(newValues);
+                      }}
+                      className="text-xs"
+                    >
+                      Add Popular (3)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => field.onChange([])}
+                      className="text-xs"
+                    >
+                      Clear All
+                    </Button>
                   </div>
+                  
                   <FormMessage />
                 </FormItem>
               )}

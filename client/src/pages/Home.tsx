@@ -334,11 +334,17 @@ export default function Home() {
           {/* Main Content */}
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
             <div className="flex justify-center mb-8">
-              <TabsList className="grid grid-cols-2 bg-white/70 backdrop-blur-sm border shadow-lg">
-                <TabsTrigger value="customize" className="px-8 py-3 text-base font-medium">
+              <TabsList className="grid w-auto grid-cols-2 bg-white/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
+                <TabsTrigger 
+                  value="customize" 
+                  className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                >
                   Create Meditation
                 </TabsTrigger>
-                <TabsTrigger value="preview" className="px-8 py-3 text-base font-medium">
+                <TabsTrigger 
+                  value="preview" 
+                  className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+                >
                   Preview & Refine
                 </TabsTrigger>
               </TabsList>
@@ -764,11 +770,13 @@ export default function Home() {
                         </CardHeader>
                         <CardContent>
                           <VoicePreview
-                            onVoiceSelect={(voiceId: string, voiceName: string) => {
+                            onVoiceSelect={(voiceId: string, voiceName: string, voiceURI?: string) => {
                               if (meditation) {
                                 setMeditation({
                                   ...meditation,
-                                  voiceStyle: voiceId
+                                  voiceStyle: voiceId,
+                                  exactVoiceName: voiceName,
+                                  exactVoiceURI: voiceURI || null
                                 });
                               }
                             }}

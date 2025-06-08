@@ -11,7 +11,7 @@ import { voiceOptions } from "@shared/schema";
 import VoiceCloning from "./VoiceCloning";
 
 interface VoicePreviewProps {
-  onVoiceSelect: (voiceURI: string, voiceName: string) => void;
+  onVoiceSelect: (voiceURI: string, voiceName: string, exactVoiceURI?: string) => void;
   preSelectedVoiceType?: 'male' | 'female' | 'any';
 }
 
@@ -43,7 +43,35 @@ export default function VoicePreview({ onVoiceSelect, preSelectedVoiceType = 'an
     setSelectedVoice(voiceId);
     const selectedOption = voiceOptions.find(v => v.id === voiceId) || customVoices.find(v => v.id === voiceId);
     if (selectedOption) {
-      onVoiceSelect(voiceId, selectedOption.name);
+      // Try to get the actual voice from Speech Synthesis API
+      const voices = speechSynthesis.getVoices();
+      let matchedVoice = null;
+      
+      if (voices.length > 0) {
+        // Find a matching voice based on the selected option's characteristics
+        const voiceOption = voiceOptions.find(v => v.id === voiceId);
+        if (voiceOption) {
+          matchedVoice = voices.find(voice => 
+            voice.lang.includes('en') && 
+            (voiceOption.gender === 'female' ? 
+              voice.name.toLowerCase().includes('female') || 
+              voice.name.toLowerCase().includes('woman') || 
+              voice.name.toLowerCase().includes('samantha') ||
+              voice.name.toLowerCase().includes('karen') ||
+              voice.name.toLowerCase().includes('victoria') ||
+              voice.name.toLowerCase().includes('alice') ||
+              voice.name.toLowerCase().includes('zira') : 
+             voiceOption.gender === 'male' ? 
+              voice.name.toLowerCase().includes('male') || 
+              voice.name.toLowerCase().includes('man') ||
+              voice.name.toLowerCase().includes('daniel') ||
+              voice.name.toLowerCase().includes('alex') ||
+              voice.name.toLowerCase().includes('david') : true)
+          ) || voices.find(voice => voice.lang.includes('en')) || voices[0];
+        }
+      }
+      
+      onVoiceSelect(voiceId, selectedOption.name, matchedVoice?.voiceURI);
     }
   };
 
