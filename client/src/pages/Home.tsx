@@ -319,56 +319,56 @@ export default function Home() {
   
   return (
     <div className="pb-10 px-4 max-w-7xl mx-auto">
-        <div className="flex flex-col gap-8 py-8">
-          {/* Header Section */}
-          <div className="text-center space-y-4">
-            <h1 className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 mb-3">
-              Affirmation Studio
-            </h1>
-            <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
-              Create personalized meditation experiences with AI-powered voices, healing frequencies, and custom affirmations
-            </p>
+      <div className="flex flex-col gap-8 py-8">
+        {/* Header Section */}
+        <div className="text-center space-y-4">
+          <h1 className="text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 mb-3">
+            Affirmation Studio
+          </h1>
+          <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
+            Create personalized meditation experiences with AI-powered voices, healing frequencies, and custom affirmations
+          </p>
+        </div>
+        
+        {/* Main Content */}
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <div className="flex justify-center mb-8">
+            <TabsList className="grid w-auto grid-cols-2 bg-white/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
+              <TabsTrigger 
+                value="customize" 
+                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+              >
+                Create Meditation
+              </TabsTrigger>
+              <TabsTrigger 
+                value="preview" 
+                className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+              >
+                Preview & Refine
+              </TabsTrigger>
+            </TabsList>
           </div>
           
-          {/* Main Content */}
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <div className="flex justify-center mb-8">
-              <TabsList className="grid w-auto grid-cols-2 bg-white/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
-                <TabsTrigger 
-                  value="customize" 
-                  className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
-                >
-                  Create Meditation
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="preview" 
-                  className="px-6 py-3 text-base font-medium rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
-                >
-                  Preview & Refine
-                </TabsTrigger>
-              </TabsList>
+          <TabsContent value="customize" className="space-y-8">
+            <div className="max-w-4xl mx-auto">
+              <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="text-center pb-6">
+                  <CardTitle className="text-2xl font-bold text-foreground">
+                    Design Your Perfect Meditation Experience
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MeditationForm 
+                    initialValues={meditation} 
+                    onGenerate={handleGenerate} 
+                    isGenerating={isGenerating}
+                  />
+                </CardContent>
+              </Card>
             </div>
-            
-            <TabsContent value="customize" className="space-y-8">
-              <div className="max-w-4xl mx-auto">
-                <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-xl">
-                  <CardHeader className="text-center pb-6">
-                    <CardTitle className="text-2xl font-bold text-foreground">
-                      Design Your Perfect Meditation Experience
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <MeditationForm 
-                      initialValues={meditation} 
-                      onGenerate={handleGenerate} 
-                      isGenerating={isGenerating}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+          </TabsContent>
           
-            <TabsContent value="preview" className="space-y-8">
+          <TabsContent value="preview" className="space-y-8">
               {meditation ? (
                 <div className="max-w-6xl mx-auto">
                   {/* Audio Player Section */}
@@ -956,9 +956,8 @@ export default function Home() {
                   </CardContent>
                 </Card>
               )}
-            </TabsContent>
-          </Tabs>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Mood Check-in Components */}
