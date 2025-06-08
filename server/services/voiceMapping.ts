@@ -3,25 +3,31 @@
  * Maps user-friendly voice style names to ElevenLabs voice IDs
  */
 
-// Voice ID mapping for different styles
+// Voice ID mapping for different styles (Updated with actual ElevenLabs voices)
 export const voiceIdMapping: Record<string, string> = {
   // Female voices
-  'calm-female': 'EXAVITQu4vr4xnSDxMaL', // Charlotte - calm female
-  'whisper-female': '21m00Tcm4TlvDq8ikWAM', // Rachel - soft, gentle female  
-  'motivational-female': 'yoZ06aMxZJJ28mfd3POQ', // Bella - energetic female
+  'calm-female': 'EXAVITQu4vr4xnSDxMaL', // Sarah - calm female (verified)
+  'whisper-female': 'XB0fDUnXU5powFXDhCwa', // Charlotte - soft, gentle female  
+  'motivational-female': '9BWtsMINqrJLrRacOk9x', // Aria - energetic female
   
   // Male voices
-  'calm-male': 'VR6AewLTigWG4xSOukaG', // Sam - calm male
-  'whisper-male': 'pNInz6obpgDQGcFmaJgB', // Adam - versatile male
-  'motivational-male': 'ErXwobaYiN019PkySvjV', // Antoni - strong male
+  'calm-male': 'JBFqnCBsd6RMkjVDRZzb', // George - calm male
+  'whisper-male': 'TX3LPaxmHKxFdv7VOQHJ', // Liam - soft male
+  'motivational-male': 'nPczCjzI2devNBz1zQrb', // Brian - strong male
   
   // Child-friendly voices
-  'friendly-wizard': 'ODq5zmih8GrVes37Dizd', // Special character voice
-  'fairy-godmother': 'D38z5RcWu1voky8WS1ja', // Magical female voice
-  'superhero': 'TxGEqnHWrfWFTfGW9XjX', // Strong superhero voice
+  'friendly-wizard': 'iP95p4xoKVk53GoZ742B', // Chris - friendly character voice
+  'fairy-godmother': 'pFZP5JQG7iQjIQuC4Bku', // Lily - magical female voice
+  'superhero': 'onwK4e9ZLuTAKqWW03F9', // Daniel - strong superhero voice
+  
+  // Additional options
+  'neutral': 'SAz9YHcvj6GT2YYXdXww', // River - neutral voice
+  'young-female': 'Xb7hH8MSUJpSbSDYk0k2', // Alice - younger female
+  'mature-female': 'cgSgspJ2msm6clMCkdW9', // Jessica - mature female
+  'mature-male': 'bIHbv24MWmeRgasZH58o', // Will - mature male
   
   // Default fallback
-  'default': 'pNInz6obpgDQGcFmaJgB' // Adam - versatile male
+  'default': 'JBFqnCBsd6RMkjVDRZzb' // George - calm male
 };
 
 /**

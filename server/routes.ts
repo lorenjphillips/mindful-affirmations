@@ -380,7 +380,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`[Audio] Generated audio URL: ${audioUrl}`);
         } catch (error) {
-          console.error("[Audio] Error or timeout generating audio:", error.message);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error("[Audio] Error or timeout generating audio:", errorMessage);
           
           // Continue with the flow even if there's an error - client will use fallback
           res.write(JSON.stringify({ 
@@ -390,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Step 3: Update the meditation with the audio URL if we have one
-        if (audioUrl) {
+        if (audioUrl && typeof audioUrl === 'string') {
           await storage.setMeditationAudioUrl(meditation.id, audioUrl);
         }
         
@@ -407,10 +408,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
         
       } catch (error) {
-        console.error("[Audio] Error generating audio:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("[Audio] Error generating audio:", errorMessage);
         return res.status(500).json({ 
           message: "Failed to generate audio", 
-          error: error.message 
+          error: errorMessage 
         });
       }
     } catch (error) {

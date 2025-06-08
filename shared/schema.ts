@@ -84,134 +84,171 @@ export const insertMeditationSchema = createInsertSchema(meditations).omit({
 export type InsertMeditation = z.infer<typeof insertMeditationSchema>;
 export type Meditation = typeof meditations.$inferSelect;
 
-// Voice options with enhanced descriptions and character details
+// Voice options with enhanced descriptions and character details (Updated with real ElevenLabs voices)
 export const voiceOptions = [
-  // Adult Female voices
+  // Adult Female voices (Verified ElevenLabs voices)
   { 
     id: "calm-female", 
-    name: "Serene Sarah", 
+    name: "Sarah - Calm & Serene", 
     description: "Gentle, nurturing feminine voice perfect for deep relaxation and sleep meditations. Warm and comforting tone that melts away stress.",
     gender: "female", 
     audience: "adult",
+    elevenLabsId: "EXAVITQu4vr4xnSDxMaL",
     benefits: ["Deep relaxation", "Stress relief", "Sleep preparation", "Emotional healing"]
   },
   { 
     id: "motivational-female", 
-    name: "Empowering Emma", 
+    name: "Aria - Energetic & Inspiring", 
     description: "Confident, inspiring feminine voice that energizes and motivates. Perfect for morning affirmations and confidence building.",
     gender: "female", 
     audience: "adult",
+    elevenLabsId: "9BWtsMINqrJLrRacOk9x",
     benefits: ["Confidence boost", "Morning energy", "Motivation", "Self-empowerment"]
   },
   { 
     id: "whisper-female", 
-    name: "Mindful Maya", 
+    name: "Charlotte - Soft & Gentle", 
     description: "Soft, intimate feminine whisper that creates a sacred, peaceful atmosphere. Ideal for deep meditation and mindfulness practice.",
     gender: "female", 
     audience: "adult",
+    elevenLabsId: "XB0fDUnXU5powFXDhCwa",
     benefits: ["Deep meditation", "Mindfulness", "Inner peace", "Spiritual connection"]
   },
   { 
-    id: "therapeutic-female", 
-    name: "Healing Hannah", 
+    id: "young-female", 
+    name: "Alice - Youthful & Fresh", 
+    description: "Bright, youthful feminine voice that brings lightness and joy. Perfect for morning meditations and positive affirmations.",
+    gender: "female", 
+    audience: "adult",
+    elevenLabsId: "Xb7hH8MSUJpSbSDYk0k2",
+    benefits: ["Youthful energy", "Joy", "Positivity", "Fresh perspective"]
+  },
+  { 
+    id: "mature-female", 
+    name: "Jessica - Mature & Wise", 
     description: "Professional, therapeutic feminine tone with clinical warmth. Perfect for anxiety relief and emotional healing sessions.",
     gender: "female", 
     audience: "adult",
+    elevenLabsId: "cgSgspJ2msm6clMCkdW9",
     benefits: ["Anxiety relief", "Emotional healing", "Trauma recovery", "Therapeutic support"]
   },
   
-  // Adult Male voices
+  // Adult Male voices (Verified ElevenLabs voices)
   { 
     id: "calm-male", 
-    name: "Tranquil Thomas", 
+    name: "George - Deep & Grounding", 
     description: "Deep, grounding masculine voice that provides stability and calm. Excellent for stress relief and centering practices.",
     gender: "male", 
     audience: "adult",
+    elevenLabsId: "JBFqnCBsd6RMkjVDRZzb",
     benefits: ["Grounding", "Stress relief", "Stability", "Inner strength"]
   },
   { 
     id: "motivational-male", 
-    name: "Dynamic David", 
+    name: "Brian - Strong & Inspiring", 
     description: "Strong, inspiring masculine voice that builds confidence and determination. Perfect for goal-setting and achievement meditations.",
     gender: "male", 
     audience: "adult",
+    elevenLabsId: "nPczCjzI2devNBz1zQrb",
     benefits: ["Leadership", "Goal achievement", "Confidence", "Determination"]
   },
   { 
     id: "whisper-male", 
-    name: "Gentle Gabriel", 
+    name: "Liam - Soft & Caring", 
     description: "Soft, caring masculine whisper that creates intimacy and trust. Ideal for vulnerability and self-compassion work.",
     gender: "male", 
     audience: "adult",
+    elevenLabsId: "TX3LPaxmHKxFdv7VOQHJ",
     benefits: ["Self-compassion", "Vulnerability", "Trust", "Emotional safety"]
   },
   { 
-    id: "wise-male", 
-    name: "Sage Samuel", 
+    id: "mature-male", 
+    name: "Will - Mature & Wise", 
     description: "Mature, wise masculine voice with years of experience. Perfect for life guidance and philosophical meditations.",
     gender: "male", 
     audience: "adult",
+    elevenLabsId: "bIHbv24MWmeRgasZH58o",
     benefits: ["Wisdom", "Life guidance", "Philosophy", "Deep insight"]
   },
   
-  // Child-friendly character voices
+  // Neutral voice option
+  { 
+    id: "neutral", 
+    name: "River - Neutral & Balanced", 
+    description: "Gender-neutral voice that provides balance and inclusivity. Perfect for universal meditation experiences.",
+    gender: "neutral", 
+    audience: "adult",
+    elevenLabsId: "SAz9YHcvj6GT2YYXdXww",
+    benefits: ["Inclusivity", "Balance", "Universal appeal", "Non-binary comfort"]
+  },
+  
+  // Child-friendly character voices (Using available ElevenLabs voices)
   { 
     id: "friendly-wizard", 
-    name: "Wise Wizard Willow", 
+    name: "Chris - Friendly Wizard", 
     description: "Magical and wise storytelling voice that makes meditation feel like an enchanted adventure. Sparks imagination and wonder.",
     gender: "male", 
     audience: "child",
+    elevenLabsId: "iP95p4xoKVk53GoZ742B",
     benefits: ["Imagination", "Wonder", "Magic", "Storytelling"]
   },
   { 
     id: "fairy-godmother", 
-    name: "Fairy Luna", 
+    name: "Lily - Fairy Godmother", 
     description: "Sweet, enchanting fairy voice that guides children through magical meditation journeys. Gentle and protective energy.",
     gender: "female", 
     audience: "child",
+    elevenLabsId: "pFZP5JQG7iQjIQuC4Bku",
     benefits: ["Magic", "Protection", "Gentleness", "Wonder"]
   },
   { 
-    id: "space-explorer", 
-    name: "Captain Cosmos", 
-    description: "Adventurous space captain voice that takes children on cosmic meditation adventures. Builds courage and curiosity.",
-    gender: "male", 
-    audience: "child",
-    benefits: ["Adventure", "Courage", "Curiosity", "Exploration"]
-  },
-  { 
-    id: "nature-guide", 
-    name: "Forest Friend Fern", 
-    description: "Gentle nature explorer voice that connects children with the natural world. Teaches mindfulness through nature imagery.",
-    gender: "female", 
-    audience: "child",
-    benefits: ["Nature connection", "Mindfulness", "Peace", "Environmental awareness"]
-  },
-  { 
     id: "superhero", 
-    name: "Super Sam", 
+    name: "Daniel - Super Hero", 
     description: "Confident, brave superhero voice that empowers children and builds inner strength. Teaches that real superpowers come from within.",
     gender: "male", 
     audience: "child",
+    elevenLabsId: "onwK4e9ZLuTAKqWW03F9",
     benefits: ["Inner strength", "Confidence", "Bravery", "Self-empowerment"]
   },
+  // Additional available ElevenLabs voices
   { 
-    id: "animal-friend", 
-    name: "Buddy the Bear", 
-    description: "Friendly, cuddly animal companion voice that makes children feel safe and loved. Perfect for bedtime and comfort meditations.",
-    gender: "male", 
-    audience: "child",
-    benefits: ["Comfort", "Safety", "Love", "Bedtime peace"]
-  },
-  { 
-    id: "rainbow-guide", 
-    name: "Rainbow Riley", 
-    description: "Colorful, joyful voice that brings happiness and creativity to meditation. Teaches emotional awareness through color and light.",
+    id: "laura", 
+    name: "Laura - Elegant & Refined", 
+    description: "Sophisticated, articulate feminine voice perfect for guided meditations and mindfulness practices.",
     gender: "female", 
-    audience: "child",
-    benefits: ["Joy", "Creativity", "Emotional awareness", "Happiness"]
+    audience: "adult",
+    elevenLabsId: "FGY2WhTYpPnrIDTdsKH5",
+    benefits: ["Sophistication", "Clarity", "Mindfulness", "Elegance"]
   },
-  
+  { 
+    id: "charlie", 
+    name: "Charlie - Friendly & Approachable", 
+    description: "Warm, friendly masculine voice that creates a welcoming meditation atmosphere.",
+    gender: "male", 
+    audience: "adult",
+    elevenLabsId: "IKne3meq5aSn9XLyUdCD",
+    benefits: ["Friendliness", "Warmth", "Approachability", "Comfort"]
+  },
+  { 
+    id: "callum", 
+    name: "Callum - Rich & Resonant", 
+    description: "Deep, rich masculine voice with excellent resonance for meditation and relaxation.",
+    gender: "male", 
+    audience: "adult",
+    elevenLabsId: "N2lVS1w4EtoT3dr4eOWO",
+    benefits: ["Deep resonance", "Relaxation", "Grounding", "Authority"]
+  },
+  { 
+    id: "matilda", 
+    name: "Matilda - Gentle & Nurturing", 
+    description: "Gentle, nurturing feminine voice ideal for healing and therapeutic meditations.",
+    gender: "female", 
+    audience: "adult",
+    elevenLabsId: "XrExE9yKIg1WjnnlVkGX",
+    benefits: ["Nurturing", "Healing", "Therapeutic", "Gentleness"]
+  }
+
+  /* DISABLED - Voice cloning and family voices require custom implementation
   // Family voices for children
   { 
     id: "mom-voice", 
@@ -221,33 +258,6 @@ export const voiceOptions = [
     audience: "child", 
     family: true,
     benefits: ["Unconditional love", "Safety", "Nurturing", "Bedtime comfort"]
-  },
-  { 
-    id: "dad-voice", 
-    name: "Caring Papa", 
-    description: "Strong yet gentle fatherly voice that provides protection and guidance. Builds confidence while offering security.",
-    gender: "male", 
-    audience: "child", 
-    family: true,
-    benefits: ["Protection", "Guidance", "Security", "Confidence building"]
-  },
-  { 
-    id: "grandma-voice", 
-    name: "Sweet Grandma", 
-    description: "Tender, wise grandmother voice full of stories and unconditional love. Creates the coziest, safest meditation space.",
-    gender: "female", 
-    audience: "child", 
-    family: true,
-    benefits: ["Wisdom", "Stories", "Unconditional love", "Cozy safety"]
-  },
-  { 
-    id: "grandpa-voice", 
-    name: "Kind Grandpa", 
-    description: "Gentle, patient grandfather voice that shares life lessons with warmth. Perfect for teaching mindfulness and gratitude.",
-    gender: "male", 
-    audience: "child", 
-    family: true,
-    benefits: ["Life lessons", "Patience", "Mindfulness", "Gratitude"]
   },
   
   // AI Voice Cloning Options (Premium Feature)
@@ -261,18 +271,8 @@ export const voiceOptions = [
     premium: true,
     voiceCloning: true,
     benefits: ["Ultimate personalization", "Parent's actual voice", "Deep bonding", "Familiar comfort"]
-  },
-  { 
-    id: "clone-family-voice", 
-    name: "Family Member Voice", 
-    description: "Clone any family member's voice (grandparent, sibling, etc.) to create a truly personalized meditation experience.",
-    gender: "any", 
-    audience: "child", 
-    family: true,
-    premium: true,
-    voiceCloning: true,
-    benefits: ["Family connection", "Personal touch", "Comfort from loved ones", "Custom experience"]
   }
+  */
 ];
 
 // Background music options with detailed benefits
