@@ -57,12 +57,15 @@ interface AudioPlayerProps {
   isPlaying: boolean;
   setIsPlaying: (playing: boolean) => void;
   onMeditationComplete?: () => void;
+  isGenerating?: boolean;
 }
 
-export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMeditationComplete }: AudioPlayerProps) {
+export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMeditationComplete, isGenerating = false }: AudioPlayerProps) {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [audioReady, setAudioReady] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState<'pending' | 'generating' | 'ready' | 'failed'>('pending');
   
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
   const progressTimerRef = useRef<number | null>(null);
@@ -77,7 +80,11 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
   
   // Initialize when meditation changes
   useEffect(() => {
-    if (!meditation) return;
+    if (!meditation) {
+      setGenerationStatus('pending');
+      setAudioReady(false);
+      return;
+    }
     
     // Stop existing speech synthesis if it's active
     if (speechSynthRef.current) {
@@ -88,10 +95,22 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
     // Reset state
     setProgress(0);
     setCurrentTime(0);
+    setAudioReady(false);
+    
+    // Check if we have audio ready or need to generate
+    if (meditation.audioUrl && meditation.audioUrl.includes('/api/audio/')) {
+      setGenerationStatus('ready');
+      setAudioReady(true);
+    } else if (meditation.meditationScript) {
+      setGenerationStatus('ready');
+      setAudioReady(true);
+    } else {
+      setGenerationStatus('pending');
+    }
     
     // Calculate estimated duration (roughly 0.5 seconds per word for meditation)
     const wordCount = meditation.meditationScript?.split(/\s+/).length || 0;
-    const estimatedDuration = Math.max(meditation.duration * 60, wordCount * 0.5);
+    const estimatedDuration = Math.max((meditation.estimatedDuration || meditation.duration || 5) * 60, wordCount * 0.5);
     setDuration(estimatedDuration);
     
     // Clean up on unmount
@@ -107,6 +126,17 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
       }
     };
   }, [meditation]);
+
+  // Handle generation status changes
+  useEffect(() => {
+    if (isGenerating) {
+      setGenerationStatus('generating');
+      setAudioReady(false);
+    } else if (meditation?.meditationScript || meditation?.audioUrl) {
+      setGenerationStatus('ready');
+      setAudioReady(true);
+    }
+  }, [isGenerating, meditation]);
   
   // Create background audio element for music
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
@@ -207,6 +237,10 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
     // Handle play/pause state
   useEffect(() => {
     if (!meditation || !meditation.meditationScript) return;
+    if (!audioReady || generationStatus !== 'ready') {
+      console.log('Audio not ready for playback:', { audioReady, generationStatus });
+      return;
+    }
 
     if (isPlaying) {
       // Check if we have a premium audio URL from ElevenLabs first
@@ -581,6 +615,10 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
   
   // Toggle play/pause
   const togglePlayPause = () => {
+    if (!audioReady || generationStatus !== 'ready') {
+      console.log('Cannot play: audio not ready');
+      return;
+    }
     setIsPlaying(!isPlaying);
   };
 
@@ -589,100 +627,193 @@ export default function AudioPlayer({ meditation, isPlaying, setIsPlaying, onMed
     return null;
   }
 
+  // Get status message based on generation state
+  const getStatusMessage = () => {
+    switch (generationStatus) {
+      case 'pending':
+        return 'Click Generate to create your meditation';
+      case 'generating':
+        return 'Generating your personalized meditation...';
+      case 'ready':
+        return audioReady ? 'Ready to play' : 'Preparing audio...';
+      case 'failed':
+        return 'Generation failed - using browser voice';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex flex-col items-center space-y-4">
-        <h3 className="text-xl font-semibold text-center mb-3">{meditation.title}</h3>
+        <div className="text-center">
+          <h3 className="text-xl font-semibold mb-2">{meditation.title}</h3>
+          <p className="text-sm text-gray-600">{getStatusMessage()}</p>
+        </div>
         
         {/* Waveform Visualization */}
-        <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden relative">
-          <div className="w-full h-full flex items-center justify-center">
-            <div className={cn(
-              "flex items-end space-x-1 h-full w-full px-4 transition-all",
-              isPlaying ? "opacity-100" : "opacity-50"
-            )}>
-              {/* Audio visualization bars that animate when playing */}
-              {Array.from({ length: 30 }).map((_, i) => {
-                const height = isPlaying 
-                  ? 20 + Math.sin(i * 0.5 + currentTime * 2) * 10 + Math.random() * 10
-                  : 15 + Math.sin(i * 0.2) * 5;
-                
-                return (
+        <div className="w-full h-32 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl flex items-center justify-center overflow-hidden relative shadow-inner">
+          {generationStatus === 'generating' ? (
+            /* Loading Animation */
+            <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
+                {Array.from({ length: 5 }).map((_, i) => (
                   <div 
                     key={i}
+                    className="w-2 h-8 bg-gradient-to-t from-purple-400 to-purple-600 rounded-full animate-pulse"
                     style={{ 
-                      height: `${height}px`,
-                      transition: 'height 0.1s ease'
+                      animationDelay: `${i * 0.1}s`,
+                      animationDuration: '1s'
                     }}
-                    className="w-2 bg-gradient-to-t from-accent to-primary rounded-full"
                   />
-                );
-              })}
+                ))}
+              </div>
+              <span className="text-purple-600 font-medium ml-4">Generating...</span>
             </div>
-          </div>
-          
-          {/* Overlay for play button when paused */}
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10 rounded-lg">
-              <button 
-                className="w-14 h-14 rounded-full bg-white shadow-md flex items-center justify-center"
-                onClick={togglePlayPause} 
-                aria-label="Play"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          ) : generationStatus === 'pending' ? (
+            /* Waiting State */
+            <div className="text-center text-gray-400">
+              <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gray-200 flex items-center justify-center">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
                 </svg>
-              </button>
+              </div>
+              <p className="text-sm">Create your meditation first</p>
+            </div>
+          ) : (
+            /* Waveform */
+            <div className="w-full h-full flex items-center justify-center relative">
+              <div className={cn(
+                "flex items-end space-x-1 h-full w-full px-6 transition-all duration-300",
+                isPlaying ? "opacity-100" : "opacity-70"
+              )}>
+                {Array.from({ length: 40 }).map((_, i) => {
+                  const baseHeight = 8 + Math.sin(i * 0.3) * 6;
+                  const height = isPlaying 
+                    ? baseHeight + Math.sin(i * 0.4 + currentTime * 3) * 15 + Math.random() * 8
+                    : baseHeight;
+                  
+                  const opacity = isPlaying 
+                    ? 0.7 + Math.sin(i * 0.2 + currentTime * 2) * 0.3
+                    : 0.5;
+                  
+                  return (
+                    <div 
+                      key={i}
+                      style={{ 
+                        height: `${Math.max(4, height)}px`,
+                        opacity,
+                        transition: 'height 0.15s ease-out, opacity 0.1s ease'
+                      }}
+                      className={cn(
+                        "flex-1 rounded-full",
+                        isPlaying 
+                          ? "bg-gradient-to-t from-purple-500 via-purple-400 to-blue-400" 
+                          : "bg-gradient-to-t from-gray-400 to-gray-300"
+                      )}
+                    />
+                  );
+                })}
+              </div>
+              
+              {/* Play/Pause Overlay */}
+              {!isPlaying && audioReady && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button 
+                    className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white hover:scale-105 transition-all duration-200"
+                    onClick={togglePlayPause} 
+                    aria-label="Play meditation"
+                  >
+                    <svg className="w-7 h-7 text-purple-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
+              {/* Disabled Overlay */}
+              {!audioReady && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-xl">
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-300 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-gray-500">Not ready</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
         
-        {/* Playback Controls */}
-        <div className="w-full flex items-center space-x-2">
-          <span className="text-sm text-gray-600 w-10 text-right">{formatTime(isNaN(currentTime) ? 0 : currentTime)}</span>
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={isNaN(progress) ? 0 : progress} 
-            onChange={(e) => {
-              // For now, we don't support seeking in Web Speech API
-              // This is just for UI display
-              setProgress(parseFloat(e.target.value));
-            }}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
-          />
-          <span className="text-sm text-gray-600 w-10">{formatTime(isNaN(duration) ? 0 : duration)}</span>
-        </div>
+        {/* Progress Bar */}
+        {audioReady && (
+          <div className="w-full flex items-center space-x-3">
+            <span className="text-sm text-gray-500 font-mono w-12 text-right">
+              {formatTime(isNaN(currentTime) ? 0 : currentTime)}
+            </span>
+            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${isNaN(progress) ? 0 : progress}%` }}
+              />
+            </div>
+            <span className="text-sm text-gray-500 font-mono w-12">
+              {formatTime(isNaN(duration) ? 0 : duration)}
+            </span>
+          </div>
+        )}
         
-        {/* Play/Pause Button */}
-        <div className="flex items-center justify-between w-full">
+        {/* Control Panel */}
+        <div className="w-full flex items-center justify-between">
+          {/* Main Play/Pause Button */}
           <button 
-            className={`w-12 h-12 rounded-full flex items-center justify-center ${isPlaying ? 'bg-purple-500 text-white' : 'bg-white text-purple-500 border border-purple-500'}`}
+            className={cn(
+              "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg",
+              audioReady && generationStatus === 'ready'
+                ? isPlaying 
+                  ? "bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-purple-200" 
+                  : "bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-purple-200"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            )}
             onClick={togglePlayPause}
-            aria-label={isPlaying ? 'Pause' : 'Play'}
+            disabled={!audioReady || generationStatus !== 'ready'}
+            aria-label={isPlaying ? 'Pause meditation' : 'Play meditation'}
           >
             {isPlaying ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="w-7 h-7 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
               </svg>
             )}
           </button>
           
-          <div className="flex items-center">
-            <div className="text-sm text-gray-700">
-              <div className="font-medium">{meditation?.voiceStyle || 'Calm Voice'}</div>
-              <div className="text-xs text-gray-500">
-                {meditation?.backgroundMusic && meditation.backgroundMusic !== 'none' ? (
-                  <span>{meditation.backgroundMusic} • </span>
-                ) : null}
-                {meditation?.duration || 5} min
+          {/* Meditation Info */}
+          <div className="flex-1 ml-4">
+            <div className="text-right">
+              <div className="font-medium text-gray-800">
+                {meditation?.exactVoiceName || meditation?.voiceStyle || 'Default Voice'}
+              </div>
+              <div className="text-sm text-gray-500 space-x-2">
+                {meditation?.backgroundMusic && meditation.backgroundMusic !== 'none' && (
+                  <span className="inline-flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                    {meditation.backgroundMusic.replace('-', ' ')}
+                  </span>
+                )}
+                <span className="inline-flex items-center">
+                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  {meditation?.estimatedDuration || meditation?.duration || 5} min
+                </span>
               </div>
             </div>
           </div>

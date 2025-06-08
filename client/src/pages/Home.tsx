@@ -408,6 +408,7 @@ export default function Home() {
                         isPlaying={isPlaying} 
                         setIsPlaying={setIsPlaying}
                         onMeditationComplete={() => setShowPostMoodCheckIn(true)}
+                        isGenerating={isGenerating}
                       />
                     </CardContent>
                   </Card>
