@@ -9,8 +9,7 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5000', 
-    'https://mindful-affirmations.vercel.app',
-    // Add your Vercel domain here when you deploy
+    'https://mindful-affirmations.vercel.app'
   ];
   
   const origin = req.headers.origin;
