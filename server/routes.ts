@@ -88,6 +88,9 @@ async function generateTextToSpeechAudio(
     );
     
     console.log("[Audio] Sending request to ElevenLabs API");
+    console.log("[ElevenLabs] API URL:", `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`);
+    console.log("[ElevenLabs] API Key present:", !!apiKey && apiKey.length > 10);
+    console.log("[ElevenLabs] Text sample:", processedText.substring(0, 100) + "...");
     
     const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
     
@@ -98,6 +101,8 @@ async function generateTextToSpeechAudio(
       style: 0.35,             // Enhanced style for better meditation intonation and pacing
       use_speaker_boost: true  // Using speaker boost for clearer audio
     };
+    
+    console.log("[ElevenLabs] Voice settings:", settings);
     
     // Set up API request with longer timeout
     const controller = new AbortController();
@@ -163,7 +168,8 @@ async function generateTextToSpeechAudio(
       
     } catch (error) {
       console.error('[Audio] Error in API request:', error);
-      fs.appendFileSync(logPath, `\n\nError: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      fs.appendFileSync(logPath, `\n\nError: ${errorMessage}`);
       throw error;
     }
   } catch (error) {
@@ -289,22 +295,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { meditationId, meditationScript, voiceStyle, exactVoiceName, exactVoiceURI, duration, backgroundMusic, musicVolume, pauseDuration } = req.body;
 
       if (!meditationId || !meditationScript) {
+        console.error("[Audio] Missing required fields:", { meditationId: !!meditationId, meditationScript: !!meditationScript });
         return res.status(400).json({ message: "Missing required fields" });
       }
       
       console.log("[Audio] Received request with:", {
         meditationId,
         voiceStyle,
+        exactVoiceName,
+        exactVoiceURI,
         duration,
         backgroundMusic,
         musicVolume,
         scriptLength: meditationScript?.length || 0
       });
 
-      // Step 1: Get the meditation from storage
-      const meditation = await storage.getMeditation(parseInt(meditationId));
+      // Step 1: Check if meditation exists in storage (convert to number if needed)
+      const numericId = typeof meditationId === 'string' ? parseInt(meditationId) : meditationId;
+      console.log("[Storage] Looking for meditation with ID:", numericId);
+      
+      let meditation = await storage.getMeditation(numericId);
       if (!meditation) {
-        return res.status(404).json({ message: "Meditation not found" });
+        console.log("[Storage] Meditation not found, checking all meditations...");
+        const allMeditations = await storage.getAllMeditations();
+        console.log("[Storage] Available meditations:", allMeditations.map(m => ({ id: m.id, title: m.title })));
+        
+        // Try to find by timestamp if it's a large number (timestamp)
+        if (meditationId > 1000000000000) {
+          console.log("[Storage] Large ID detected, treating as timestamp. Creating placeholder meditation...");
+          // Create a minimal meditation entry for audio generation
+          const insertMeditation = {
+            title: "Generated Meditation",
+            purpose: "sleep",
+            voiceStyle: voiceStyle || "calm-female",
+            backgroundMusic: backgroundMusic || "gentle-piano",
+            musicVolume: musicVolume || 50,
+            estimatedDuration: duration || 5,
+            meditationScript: meditationScript
+          };
+          meditation = await storage.createMeditation(insertMeditation);
+          console.log("[Storage] Created meditation with ID:", meditation.id);
+        } else {
+          console.error("[Storage] Meditation not found with ID:", numericId);
+          return res.status(404).json({ message: `Meditation not found with ID: ${numericId}` });
+        }
       }
 
       // Step 2: Generate speech from text

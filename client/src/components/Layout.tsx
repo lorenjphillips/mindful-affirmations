@@ -10,6 +10,12 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [location] = useLocation();
+  
+  // TODO: Dark mode functionality temporarily disabled due to styling issues
+  // Will be re-enabled once dark mode styles are properly implemented
+  const [isDarkMode, setIsDarkMode] = useState(false); // Forced to light mode for now
+  
+  /* COMMENTED OUT: Dark mode functionality temporarily disabled
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // Check localStorage or system preference
     if (typeof window !== 'undefined') {
@@ -36,6 +42,7 @@ const Layout = ({ children }: LayoutProps) => {
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
   };
+  */
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-purple-900 relative">
@@ -67,6 +74,7 @@ const Layout = ({ children }: LayoutProps) => {
                 Library
               </a>
             </Link>
+            {/* COMMENTED OUT: Dark mode toggle temporarily disabled
             <Button
               variant="ghost"
               size="icon"
@@ -75,6 +83,7 @@ const Layout = ({ children }: LayoutProps) => {
             >
               {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
             </Button>
+            */}
           </nav>
           
           <Sheet>
@@ -98,12 +107,14 @@ const Layout = ({ children }: LayoutProps) => {
                     <span>Library</span>
                   </a>
                 </Link>
+                {/* COMMENTED OUT: Dark mode toggle temporarily disabled
                 <div className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-accent/10 hover:text-accent">
                   {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                   <button onClick={toggleDarkMode}>
                     {isDarkMode ? "Light Mode" : "Dark Mode"}
                   </button>
                 </div>
+                */}
               </div>
             </SheetContent>
           </Sheet>
