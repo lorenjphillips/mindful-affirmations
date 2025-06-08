@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --include=dev
 COPY . .
-RUN npm run build:backend
+RUN npm run build
 
 FROM node:20-alpine as runner
 WORKDIR /app
@@ -15,6 +15,8 @@ ENV NODE_ENV=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
+# Copy built client files to expected location
+COPY --from=builder /app/client/dist ./dist/public
 
 # Install only production dependencies
 RUN npm ci --only=production
