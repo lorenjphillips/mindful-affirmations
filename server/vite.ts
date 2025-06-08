@@ -18,7 +18,15 @@ export async function setupVite(app: Express, server: Server) {
   // Only import Vite modules in development
   const { createServer: createViteServer, createLogger } = await import("vite");
   const { nanoid } = await import("nanoid");
-  const viteConfig = (await import("../vite.config")).default;
+  
+  // Create a minimal Vite config instead of importing the full config
+  // to avoid importing dev dependencies like @vitejs/plugin-react
+  const viteConfig = {
+    root: path.resolve(import.meta.dirname, ".."),
+    build: {
+      outDir: "dist",
+    },
+  };
   
   const viteLogger = createLogger();
 
