@@ -19,12 +19,19 @@ export async function setupVite(app: Express, server: Server) {
   const { createServer: createViteServer, createLogger } = await import("vite");
   const { nanoid } = await import("nanoid");
   
-  // Create a minimal Vite config instead of importing the full config
-  // to avoid importing dev dependencies like @vitejs/plugin-react
+  // Use the proper client directory as root and import the actual config
   const viteConfig = {
-    root: path.resolve(import.meta.dirname, ".."),
+    root: path.resolve(import.meta.dirname, "..", "client"),
     build: {
-      outDir: "dist",
+      outDir: path.resolve(import.meta.dirname, "..", "dist", "public"),
+      emptyOutDir: true,
+    },
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "..", "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "..", "shared"),
+        "@assets": path.resolve(import.meta.dirname, "..", "attached_assets"),
+      },
     },
   };
   

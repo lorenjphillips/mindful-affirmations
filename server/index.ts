@@ -1,6 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { config } from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+// Load environment variables from .env file
+config();
 
 const app = express();
 
@@ -8,7 +12,9 @@ const app = express();
 app.use((req, res, next) => {
   const allowedOrigins = [
     'http://localhost:3000',
-    'http://localhost:5000', 
+    'http://localhost:5000',
+    'http://localhost:5001',
+    'http://localhost:5173', // Vite dev server
     'https://mindful-affirmations.vercel.app'
   ];
   

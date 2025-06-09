@@ -9,21 +9,27 @@ import path from "path";
 import fs from "fs";
 import fetch from "node-fetch";
 
-// Create persistent storage directory for Replit
-const AUDIO_DIR = '/mnt/data/audio';
+// Create audio storage directory - use workspace directory on macOS/local development
+let AUDIO_DIR: string;
+
+if (process.env.NODE_ENV === 'production' && fs.existsSync('/mnt/data')) {
+  // Replit production environment
+  AUDIO_DIR = '/mnt/data/audio';
+} else {
+  // Local development or other environments
+  AUDIO_DIR = path.join(process.cwd(), 'public', 'audio');
+}
+
 try {
   if (!fs.existsSync(AUDIO_DIR)) {
     fs.mkdirSync(AUDIO_DIR, { recursive: true });
-    console.log(`Created persistent audio directory at ${AUDIO_DIR}`);
+    console.log(`Created audio directory at ${AUDIO_DIR}`);
   }
+  console.log(`Using audio directory: ${AUDIO_DIR}`);
 } catch (err) {
-  console.error(`Error creating persistent directory: ${err.message}`);
-  // Fallback to workspace directory
-  const fallbackDir = path.join(process.cwd(), 'public', 'audio');
-  if (!fs.existsSync(fallbackDir)) {
-    fs.mkdirSync(fallbackDir, { recursive: true });
-  }
-  console.log(`Using fallback directory: ${fallbackDir}`);
+  const errorMessage = err instanceof Error ? err.message : String(err);
+  console.error(`Error creating audio directory: ${errorMessage}`);
+  throw new Error(`Cannot create audio storage directory: ${errorMessage}`);
 }
 
 // Fixed implementation for TTS using ElevenLabs API
@@ -252,6 +258,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from both persistent and workspace directories
   app.use('/api/audio', (req, res, next) => {
     const filename = req.path.split('/').pop();
+    
+    if (!filename) {
+      console.log(`[Audio] Invalid filename`);
+      return next();
+    }
     
     // First, try to serve from persistent storage
     const persistentPath = path.join(AUDIO_DIR, filename);
