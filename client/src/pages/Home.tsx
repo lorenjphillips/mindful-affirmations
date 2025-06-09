@@ -366,29 +366,29 @@ export default function Home() {
       <div className="flex flex-col gap-6 py-6">
         {/* Header Section */}
         <div className="text-center space-y-3">
-          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 mb-2">
+          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-teal-600 via-blue-600 to-cyan-600 mb-2">
             Affirmation Studio
           </h1>
-          <p className="text-muted-foreground max-w-3xl mx-auto text-base leading-relaxed">
-            Create personalized meditation experiences with AI-powered voices, healing frequencies, and custom affirmations
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base leading-relaxed">
+            Create peaceful meditation experiences with Quiet Grove
           </p>
         </div>
         
         {/* Main Content */}
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-          <div className="flex justify-center mb-6">
-            <TabsList className="grid w-fit grid-cols-2 bg-background/70 backdrop-blur-sm border shadow-lg rounded-lg p-1">
+          <div className="flex justify-center mb-8">
+            <TabsList className="grid w-fit grid-cols-2 bg-white/90 backdrop-blur-sm border border-teal-100 shadow-lg rounded-xl p-1.5 gap-1">
               <TabsTrigger 
                 value="customize" 
-                className="px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all whitespace-nowrap"
+                className="px-6 py-3 text-sm font-semibold rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-teal-600 data-[state=inactive]:hover:bg-teal-50 transition-all duration-200 whitespace-nowrap min-w-[130px]"
               >
-                Create Meditation
+                Create
               </TabsTrigger>
               <TabsTrigger 
                 value="preview" 
-                className="px-4 py-2 text-sm font-medium rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all whitespace-nowrap"
+                className="px-6 py-3 text-sm font-semibold rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-teal-600 data-[state=inactive]:hover:bg-teal-50 transition-all duration-200 whitespace-nowrap min-w-[130px]"
               >
-                Preview & Refine
+                Preview
               </TabsTrigger>
             </TabsList>
           </div>

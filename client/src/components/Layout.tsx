@@ -45,46 +45,47 @@ const Layout = ({ children }: LayoutProps) => {
   */
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-purple-900 relative">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-teal-100 via-blue-100 to-cyan-100 dark:from-slate-900 dark:via-slate-800 dark:to-purple-900 relative">
       {/* Extended Background Gradient Overlay */}
-      <div className="fixed inset-0 w-full h-full bg-gradient-to-br from-blue-50/80 via-white/60 to-purple-50/80 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-purple-900/90 -z-10" />
+      <div className="fixed inset-0 w-full h-full bg-gradient-to-br from-teal-100/90 via-blue-100/80 to-cyan-100/90 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-purple-900/90 -z-10" />
       
       {/* Header */}
       <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-soft py-4 px-6 relative z-10">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-              className="w-6 h-6 text-accent" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8z"></path>
-              <path d="M8 9h8"></path>
-              <path d="M8 13h5"></path>
-              <path d="M12 7v6"></path>
-            </svg>
             <h1 className="font-semibold text-xl sm:text-2xl text-foreground">Affirmation Studio</h1>
           </div>
           
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/">
-              <a className={`${location === '/' ? 'text-accent' : 'text-muted-foreground'} hover:text-accent transition-colors font-medium`}>
-                Create
-              </a>
-            </Link>
-            <Link href="/library">
-              <a className={`${location === '/library' ? 'text-accent' : 'text-muted-foreground'} hover:text-accent transition-colors font-medium`}>
-                Library
-              </a>
-            </Link>
-            {/* COMMENTED OUT: Dark mode toggle temporarily disabled
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleDarkMode}
-              className="text-muted-foreground hover:text-accent transition-colors"
-            >
-              {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-            </Button>
-            */}
-          </nav>
+          <div className="flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/">
+                <a className={`${location === '/' ? 'text-accent' : 'text-muted-foreground'} hover:text-accent transition-colors font-medium`}>
+                  Create
+                </a>
+              </Link>
+              <Link href="/library">
+                <a className={`${location === '/library' ? 'text-accent' : 'text-muted-foreground'} hover:text-accent transition-colors font-medium`}>
+                  Library
+                </a>
+              </Link>
+              {/* COMMENTED OUT: Dark mode toggle temporarily disabled
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleDarkMode}
+                className="text-muted-foreground hover:text-accent transition-colors"
+              >
+                {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+              </Button>
+              */}
+            </nav>
+            
+            <img 
+              src="/images/quietgrovelogo.png" 
+              alt="Quiet Grove Logo" 
+              className="h-8 w-auto"
+            />
+          </div>
           
           <Sheet>
             <SheetTrigger asChild>
